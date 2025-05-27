@@ -1,9 +1,16 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
+import Workspace from "./pages/Workspace";
+import Tasks from "./pages/Tasks";
+import ReferEarn from "./pages/ReferEarn";
+import AchieveEarn from "./pages/AchieveEarn";
+import Support from "./pages/Support";
+import Tracker from "./pages/Tracker";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -16,6 +23,12 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/workspace" element={<Workspace />} />
+          <Route path="/tasks" element={<Tasks />} />
+          <Route path="/refer-earn" element={<ReferEarn />} />
+          <Route path="/achieve-earn" element={<AchieveEarn />} />
+          <Route path="/support" element={<Support />} />
+          <Route path="/tracker" element={<Tracker />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
