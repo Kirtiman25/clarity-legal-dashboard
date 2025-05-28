@@ -27,7 +27,7 @@ const Workspace = () => {
       title: 'Tasks',
       description: 'Manage your pending tasks',
       icon: CheckSquare,
-      color: 'bg-blue-500',
+      color: 'bg-orange-500',
       route: '/tasks'
     },
     {
@@ -52,7 +52,7 @@ const Workspace = () => {
       
       <div className="container mx-auto px-4 pt-20 pb-24">
         {/* Total Earnings Card */}
-        <Card className="mb-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg">
+        <Card className="mb-6 bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-medium opacity-90">Total Earnings</CardTitle>
           </CardHeader>
