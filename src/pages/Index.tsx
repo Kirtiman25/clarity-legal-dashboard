@@ -101,6 +101,13 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="text-center pb-2">
+          <div className="flex justify-center mb-4">
+            <img 
+              src="/lovable-uploads/bf6a79a0-729c-4263-ac44-d1f2cda8c9cb.png" 
+              alt="Clar Catalyst Logo" 
+              className="h-16 w-auto"
+            />
+          </div>
           <CardTitle className="text-2xl font-bold text-gray-900">
             {isLogin ? 'Welcome Back' : 'Join Legal Dashboard'}
           </CardTitle>
@@ -165,7 +172,7 @@ const Index = () => {
               </div>
             )}
             
-            <Button type="submit" className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold">
+            <Button type="submit" className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white font-semibold">
               {isLogin ? 'Sign In' : 'Create Account'}
             </Button>
           </form>
@@ -176,7 +183,7 @@ const Index = () => {
               <button
                 type="button"
                 onClick={() => setIsLogin(!isLogin)}
-                className="ml-2 font-semibold text-blue-600 hover:text-blue-800"
+                className="ml-2 font-semibold text-orange-600 hover:text-orange-800"
               >
                 {isLogin ? 'Sign up' : 'Sign in'}
               </button>
