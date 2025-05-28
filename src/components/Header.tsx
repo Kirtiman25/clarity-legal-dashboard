@@ -46,7 +46,7 @@ const Header = ({ title }: HeaderProps) => {
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center space-x-3">
           <img 
-            src="/lovable-uploads/09a00470-1ce6-4d74-9134-385be45c43a2.png" 
+            src="/lovable-uploads/0440c5a8-a767-4aa2-9754-0d4e3196a86f.png" 
             alt="Clar Catalyst Logo" 
             className="h-8 w-auto"
           />
