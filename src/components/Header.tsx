@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -46,7 +45,7 @@ const Header = ({ title }: HeaderProps) => {
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center space-x-3">
           <img 
-            src="/lovable-uploads/0440c5a8-a767-4aa2-9754-0d4e3196a86f.png" 
+            src="/lovable-uploads/fa1e0532-ff2a-474a-a3c6-ce13d2cbb813.png" 
             alt="Clar Catalyst Logo" 
             className="h-8 w-auto"
           />
