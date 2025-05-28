@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { AlertCircle, FileText, Phone } from 'lucide-react';
+import { AlertCircle, FileText, Phone, CheckSquare } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Header from '@/components/Header';
 
