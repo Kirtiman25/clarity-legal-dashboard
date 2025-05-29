@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,7 +24,7 @@ const Workspace = () => {
       const { data, error } = await supabase
         .from('earnings')
         .select('amount')
-        .eq('user_id', userProfile.id);
+        .eq('user_id', userProfile.id.toString());
 
       if (error) throw error;
 

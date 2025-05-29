@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -31,7 +30,7 @@ const Tracker = () => {
           cases(*),
           earnings(amount)
         `)
-        .eq('user_id', userProfile.id);
+        .eq('user_id', userProfile.id.toString());
 
       if (clientsError) throw clientsError;
 
@@ -39,7 +38,7 @@ const Tracker = () => {
       const { data: earnings, error: earningsError } = await supabase
         .from('earnings')
         .select('amount')
-        .eq('user_id', userProfile.id);
+        .eq('user_id', userProfile.id.toString());
 
       if (earningsError) throw earningsError;
 
