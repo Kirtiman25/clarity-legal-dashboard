@@ -30,7 +30,7 @@ const Tracker = () => {
           cases(*),
           earnings(amount)
         `)
-        .eq('user_id', userProfile.id.toString());
+        .eq('user_id', userProfile?.id?.toString());
 
       if (clientsError) throw clientsError;
 
@@ -38,7 +38,7 @@ const Tracker = () => {
       const { data: earnings, error: earningsError } = await supabase
         .from('earnings')
         .select('amount')
-        .eq('user_id', userProfile.id.toString());
+        .eq('user_id', userProfile?.id?.toString());
 
       if (earningsError) throw earningsError;
 

@@ -24,7 +24,7 @@ const Workspace = () => {
       const { data, error } = await supabase
         .from('earnings')
         .select('amount')
-        .eq('user_id', userProfile.id.toString());
+        .eq('user_id', userProfile?.id?.toString());
 
       if (error) throw error;
 
