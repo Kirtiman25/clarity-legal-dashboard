@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import Workspace from "./pages/Workspace";
 import Tasks from "./pages/Tasks";
@@ -18,21 +19,22 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/workspace" element={<Workspace />} />
-          <Route path="/tasks" element={<Tasks />} />
-          <Route path="/refer-earn" element={<ReferEarn />} />
-          <Route path="/achieve-earn" element={<AchieveEarn />} />
-          <Route path="/support" element={<Support />} />
-          <Route path="/tracker" element={<Tracker />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/workspace" element={<Workspace />} />
+            <Route path="/tasks" element={<Tasks />} />
+            <Route path="/refer-earn" element={<ReferEarn />} />
+            <Route path="/achieve-earn" element={<AchieveEarn />} />
+            <Route path="/support" element={<Support />} />
+            <Route path="/tracker" element={<Tracker />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 const Index = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -15,87 +15,69 @@ const Index = () => {
     password: '',
     referralCode: ''
   });
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { user, userProfile, signUp, signIn } = useAuth();
 
   useEffect(() => {
-    // Check if user is already logged in
-    const user = localStorage.getItem('currentUser');
-    if (user) {
-      const userData = JSON.parse(user);
-      if (userData.isPaid) {
+    if (user && userProfile) {
+      if (userProfile.is_paid) {
         navigate('/workspace');
       }
     }
-  }, [navigate]);
+  }, [user, userProfile, navigate]);
 
-  const generateReferralCode = () => {
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     
-    if (isLogin) {
-      // Login logic
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      const user = users.find((u: any) => u.email === formData.email && u.password === formData.password);
-      
-      if (user) {
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        if (user.isPaid) {
-          navigate('/workspace');
-        } else {
-          toast({
-            title: "Access Restricted",
-            description: "This app is exclusively for paid members only. To become a member or upgrade your membership, call this number.",
-            variant: "destructive",
-          });
-        }
+    try {
+      if (isLogin) {
+        await signIn(formData.email, formData.password);
       } else {
-        toast({
-          title: "Login Failed",
-          description: "Invalid email or password",
-          variant: "destructive",
-        });
+        await signUp(formData.email, formData.password, formData.fullName, formData.referralCode);
       }
-    } else {
-      // Signup logic
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      const existingUser = users.find((u: any) => u.email === formData.email);
-      
-      if (existingUser) {
-        toast({
-          title: "Signup Failed",
-          description: "User already exists",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const newUser = {
-        id: Date.now(),
-        fullName: formData.fullName,
-        email: formData.email,
-        password: formData.password,
-        referralCode: generateReferralCode(),
-        referredBy: formData.referralCode || null,
-        isPaid: true, // Set to true for demo purposes
-        totalEarnings: 0,
-        profilePicture: null
-      };
-
-      users.push(newUser);
-      localStorage.setItem('users', JSON.stringify(users));
-      localStorage.setItem('currentUser', JSON.stringify(newUser));
-      
-      toast({
-        title: "Account Created",
-        description: "Welcome to Legal Dashboard!",
-      });
-      
-      navigate('/workspace');
+    } catch (error) {
+      // Error handling is done in the auth hook
+    } finally {
+      setLoading(false);
     }
   };
+
+  // Show paid member message if user is logged in but not paid
+  if (user && userProfile && !userProfile.is_paid) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md shadow-xl">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <img 
+                src="/lovable-uploads/bf6a79a0-729c-4263-ac44-d1f2cda8c9cb.png" 
+                alt="Clar Catalyst Logo" 
+                className="h-16 w-auto"
+              />
+            </div>
+            <CardTitle className="text-2xl font-bold text-gray-900">Access Restricted</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center">
+            <p className="text-gray-600 mb-6">
+              This app is exclusively for paid members only. To become a member or upgrade your membership, call this number.
+            </p>
+            <div className="bg-orange-100 p-4 rounded-lg mb-4">
+              <p className="text-orange-800 font-semibold">+91 9876543210</p>
+            </div>
+            <Button 
+              onClick={() => navigate('/')} 
+              variant="outline" 
+              className="w-full"
+            >
+              Back to Login
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -172,8 +154,12 @@ const Index = () => {
               </div>
             )}
             
-            <Button type="submit" className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white font-semibold">
-              {isLogin ? 'Sign In' : 'Create Account'}
+            <Button 
+              type="submit" 
+              className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white font-semibold"
+              disabled={loading}
+            >
+              {loading ? 'Loading...' : (isLogin ? 'Sign In' : 'Create Account')}
             </Button>
           </form>
           

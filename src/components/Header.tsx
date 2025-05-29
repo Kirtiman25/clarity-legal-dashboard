@@ -1,32 +1,21 @@
-import { useState, useEffect } from 'react';
+
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { User, LogOut, Users, Trophy, Home, MessageSquare, BarChart3 } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { LogOut, Users, Trophy, Home, MessageSquare, BarChart3 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 interface HeaderProps {
   title: string;
 }
 
 const Header = ({ title }: HeaderProps) => {
-  const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
+  const { userProfile, signOut } = useAuth();
 
-  useEffect(() => {
-    const currentUser = localStorage.getItem('currentUser');
-    if (currentUser) {
-      setUser(JSON.parse(currentUser));
-    }
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem('currentUser');
-    toast({
-      title: "Logged Out",
-      description: "You have been successfully logged out",
-    });
+  const handleLogout = async () => {
+    await signOut();
     navigate('/');
   };
 
@@ -38,7 +27,7 @@ const Header = ({ title }: HeaderProps) => {
     { icon: BarChart3, label: 'Tracker', path: '/tracker' }
   ];
 
-  if (!user) return null;
+  if (!userProfile) return null;
 
   return (
     <div className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 shadow-sm z-50">
@@ -56,8 +45,9 @@ const Header = ({ title }: HeaderProps) => {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
               <Avatar className="h-10 w-10">
+                <AvatarImage src={userProfile.profile_picture} />
                 <AvatarFallback className="bg-orange-500 text-white">
-                  {user.fullName?.charAt(0)?.toUpperCase() || 'U'}
+                  {userProfile.full_name?.charAt(0)?.toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
             </Button>
@@ -66,8 +56,8 @@ const Header = ({ title }: HeaderProps) => {
           <DropdownMenuContent className="w-56" align="end" forceMount>
             <div className="flex items-center justify-start gap-2 p-2">
               <div className="flex flex-col space-y-1 leading-none">
-                <p className="font-medium">{user.fullName}</p>
-                <p className="text-xs text-muted-foreground">{user.email}</p>
+                <p className="font-medium">{userProfile.full_name}</p>
+                <p className="text-xs text-muted-foreground">{userProfile.email}</p>
               </div>
             </div>
             
