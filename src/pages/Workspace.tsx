@@ -28,7 +28,7 @@ const Workspace = () => {
 
       if (error) throw error;
 
-      const total = data.reduce((sum, earning) => sum + parseFloat(earning.amount), 0);
+      const total = data.reduce((sum, earning) => sum + Number(earning.amount), 0);
       setTotalEarnings(total);
     } catch (error) {
       console.error('Error fetching earnings:', error);

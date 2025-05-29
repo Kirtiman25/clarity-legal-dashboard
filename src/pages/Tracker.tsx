@@ -42,13 +42,13 @@ const Tracker = () => {
 
       if (earningsError) throw earningsError;
 
-      const total = earnings.reduce((sum, earning) => sum + parseFloat(earning.amount), 0);
+      const total = earnings.reduce((sum, earning) => sum + Number(earning.amount), 0);
       setTotalEarnings(total);
 
       // Process clients data
       const processedClients = clients.map(client => ({
         ...client,
-        totalEarnings: client.earnings.reduce((sum: number, earning: any) => sum + parseFloat(earning.amount), 0),
+        totalEarnings: client.earnings.reduce((sum: number, earning: any) => sum + Number(earning.amount), 0),
         cases: client.cases || []
       }));
 
