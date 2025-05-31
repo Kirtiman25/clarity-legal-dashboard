@@ -32,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state change:', event, session?.user?.email);
       setUser(session?.user ?? null);
       if (session?.user) {
         await fetchUserProfile(session.user.id);
@@ -61,10 +62,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string, fullName: string, referralCode?: string) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          emailRedirectTo: redirectUrl,
           data: {
             full_name: fullName,
             referred_by: referralCode || null
@@ -74,11 +78,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error;
 
-      toast({
-        title: "Account Created",
-        description: "Please check your email to verify your account.",
-      });
+      if (data.user && !data.user.email_confirmed_at) {
+        toast({
+          title: "Check Your Email",
+          description: "We've sent you a confirmation link. Please check your email and click the link to verify your account before signing in.",
+        });
+      } else {
+        toast({
+          title: "Account Created",
+          description: "Your account has been created successfully!",
+        });
+      }
     } catch (error: any) {
+      console.error('Signup error:', error);
       toast({
         title: "Signup Failed",
         description: error.message,
@@ -90,16 +102,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
+
+      toast({
+        title: "Welcome Back",
+        description: "You have been signed in successfully!",
+      });
     } catch (error: any) {
+      console.error('Signin error:', error);
+      
+      let errorMessage = error.message;
+      
+      // Handle specific error cases
+      if (error.message.includes('Email not confirmed')) {
+        errorMessage = "Please check your email and click the confirmation link before signing in.";
+      } else if (error.message.includes('Invalid login credentials')) {
+        errorMessage = "Invalid email or password. Please check your credentials and try again.";
+      }
+      
       toast({
         title: "Login Failed",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
       throw error;

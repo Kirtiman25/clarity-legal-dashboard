@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/useAuth';
 
 const Index = () => {
@@ -36,6 +37,9 @@ const Index = () => {
         await signIn(formData.email, formData.password);
       } else {
         await signUp(formData.email, formData.password, formData.fullName, formData.referralCode);
+        // After successful signup, switch to login mode
+        setIsLogin(true);
+        setFormData({ ...formData, password: '', fullName: '', referralCode: '' });
       }
     } catch (error) {
       // Error handling is done in the auth hook
@@ -98,6 +102,14 @@ const Index = () => {
           </p>
         </CardHeader>
         <CardContent>
+          {!isLogin && (
+            <Alert className="mb-4">
+              <AlertDescription>
+                After creating your account, please check your email for a verification link before signing in.
+              </AlertDescription>
+            </Alert>
+          )}
+          
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div className="space-y-2">

@@ -78,13 +78,6 @@ export type Database = {
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "cases_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
         ]
       }
       clients: {
@@ -106,15 +99,7 @@ export type Database = {
           name?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "clients_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       earnings: {
         Row: {
@@ -157,13 +142,6 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "earnings_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -214,22 +192,7 @@ export type Database = {
           referred_id?: string
           referrer_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "referrals_referred_id_fkey"
-            columns: ["referred_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "referrals_referrer_id_fkey"
-            columns: ["referrer_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       tasks: {
         Row: {
@@ -274,15 +237,7 @@ export type Database = {
           title?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "tasks_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       users: {
         Row: {
@@ -300,7 +255,7 @@ export type Database = {
           created_at?: string
           email: string
           full_name: string
-          id?: string
+          id: string
           is_paid?: boolean
           profile_picture?: string | null
           referral_code: string
@@ -318,15 +273,7 @@ export type Database = {
           referred_by?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "users_referred_by_fkey"
-            columns: ["referred_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["referral_code"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {
