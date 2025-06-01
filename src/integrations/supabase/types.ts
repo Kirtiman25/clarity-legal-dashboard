@@ -199,42 +199,51 @@ export type Database = {
           admin_note: string | null
           case_name: string | null
           client_name: string | null
+          completed_at: string | null
           created_at: string
           documents: Json | null
           id: string
           invoice_amount: string | null
           last_update: string | null
+          payment_info: string | null
           status: string
           task_type: string
           title: string
+          uploaded_documents: string[] | null
           user_id: string
         }
         Insert: {
           admin_note?: string | null
           case_name?: string | null
           client_name?: string | null
+          completed_at?: string | null
           created_at?: string
           documents?: Json | null
           id?: string
           invoice_amount?: string | null
           last_update?: string | null
+          payment_info?: string | null
           status?: string
           task_type: string
           title: string
+          uploaded_documents?: string[] | null
           user_id: string
         }
         Update: {
           admin_note?: string | null
           case_name?: string | null
           client_name?: string | null
+          completed_at?: string | null
           created_at?: string
           documents?: Json | null
           id?: string
           invoice_amount?: string | null
           last_update?: string | null
+          payment_info?: string | null
           status?: string
           task_type?: string
           title?: string
+          uploaded_documents?: string[] | null
           user_id?: string
         }
         Relationships: []

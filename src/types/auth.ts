@@ -21,3 +21,21 @@ export interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
+
+export interface Task {
+  id: string;
+  user_id: string;
+  task_type: 'pending_payment' | 'submit_documents' | 'follow_up' | 'court_hearing' | 'client_meeting' | 'document_review';
+  title: string;
+  client_name?: string;
+  case_name?: string;
+  invoice_amount?: string;
+  documents?: any;
+  admin_note?: string;
+  last_update?: string;
+  status: string;
+  completed_at?: string;
+  payment_info?: string;
+  uploaded_documents?: string[];
+  created_at: string;
+}
