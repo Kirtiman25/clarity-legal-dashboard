@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
   requirePaid?: boolean;
 }
 
-const ProtectedRoute = ({ children, requirePaid = true }: ProtectedRouteProps) => {
+const ProtectedRoute = ({ children, requirePaid = false }: ProtectedRouteProps) => {
   const { user, userProfile, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -26,11 +26,12 @@ const ProtectedRoute = ({ children, requirePaid = true }: ProtectedRouteProps) =
         return;
       }
       
-      if (requirePaid && !userProfile.is_paid) {
-        console.log('User is not paid, access denied');
-        navigate('/');
-        return;
-      }
+      // Temporarily disabled paid requirement - all authenticated users can access
+      // if (requirePaid && !userProfile.is_paid) {
+      //   console.log('User is not paid, access denied');
+      //   navigate('/');
+      //   return;
+      // }
     }
   }, [user, userProfile, loading, navigate, requirePaid]);
 
@@ -45,8 +46,8 @@ const ProtectedRoute = ({ children, requirePaid = true }: ProtectedRouteProps) =
     );
   }
 
-  // More secure check - deny access if any condition fails
-  if (!user || !userProfile || (requirePaid && !userProfile.is_paid)) {
+  // More lenient check - only require user and profile
+  if (!user || !userProfile) {
     return null;
   }
 
