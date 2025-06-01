@@ -1,19 +1,31 @@
 
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Home, CheckSquare, Trophy, Users, BarChart3 } from 'lucide-react';
+import { Home, CheckSquare, Trophy, Users, BarChart3, Shield } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isAdmin } = useAuth();
 
-  const navItems = [
+  const userNavItems = [
     { icon: Home, label: 'Home', path: '/workspace' },
     { icon: CheckSquare, label: 'Tasks', path: '/tasks' },
     { icon: Trophy, label: 'Achieve', path: '/achieve-earn' },
     { icon: Users, label: 'Refer', path: '/refer-earn' },
     { icon: BarChart3, label: 'Tracker', path: '/tracker' }
   ];
+
+  const adminNavItems = [
+    { icon: Home, label: 'Home', path: '/workspace' },
+    { icon: Shield, label: 'Admin', path: '/admin/dashboard' },
+    { icon: CheckSquare, label: 'Tasks', path: '/tasks' },
+    { icon: Users, label: 'Users', path: '/admin/users' },
+    { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' }
+  ];
+
+  const navItems = isAdmin ? adminNavItems : userNavItems;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">

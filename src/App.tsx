@@ -13,6 +13,7 @@ import AchieveEarn from "./pages/AchieveEarn";
 import ReferEarn from "./pages/ReferEarn";
 import Support from "./pages/Support";
 import Tracker from "./pages/Tracker";
+import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/refer-earn" element={<ReferEarn />} />
             <Route path="/support" element={<Support />} />
             <Route path="/tracker" element={<Tracker />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

@@ -1,16 +1,18 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckSquare, DollarSign, Trophy, Users } from 'lucide-react';
+import { CheckSquare, DollarSign, Trophy, Users, Shield, Settings } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Header from '@/components/Header';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 
 const Workspace = () => {
   const [totalEarnings, setTotalEarnings] = useState(0);
-  const { userProfile } = useAuth();
+  const { userProfile, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,7 +37,7 @@ const Workspace = () => {
     }
   };
 
-  const menuItems = [
+  const userMenuItems = [
     {
       title: 'Tasks',
       description: 'Manage your pending tasks',
@@ -59,20 +61,61 @@ const Workspace = () => {
     }
   ];
 
+  const adminMenuItems = [
+    {
+      title: 'Admin Dashboard',
+      description: 'System overview and analytics',
+      icon: Shield,
+      color: 'bg-red-500',
+      route: '/admin/dashboard'
+    },
+    {
+      title: 'User Management',
+      description: 'Manage users and roles',
+      icon: Users,
+      color: 'bg-blue-500',
+      route: '/admin/users'
+    },
+    {
+      title: 'System Settings',
+      description: 'Configure system settings',
+      icon: Settings,
+      color: 'bg-gray-500',
+      route: '/admin/settings'
+    },
+    ...userMenuItems
+  ];
+
+  const menuItems = isAdmin ? adminMenuItems : userMenuItems;
+
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
         <Header title="Workspace" />
         
         <div className="container mx-auto px-4 pt-20 pb-24">
+          {/* Admin Badge */}
+          {isAdmin && (
+            <div className="mb-4">
+              <Badge variant="secondary" className="bg-red-100 text-red-800">
+                <Shield className="h-3 w-3 mr-1" />
+                Administrator
+              </Badge>
+            </div>
+          )}
+
           <Card className="mb-6 bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-medium opacity-90">Total Earnings</CardTitle>
+              <CardTitle className="text-lg font-medium opacity-90">
+                {isAdmin ? 'Admin Access' : 'Total Earnings'}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center space-x-2">
                 <DollarSign className="h-8 w-8" />
-                <span className="text-3xl font-bold">₹{totalEarnings.toLocaleString()}</span>
+                <span className="text-3xl font-bold">
+                  {isAdmin ? 'Full System Access' : `₹${totalEarnings.toLocaleString()}`}
+                </span>
               </div>
             </CardContent>
           </Card>

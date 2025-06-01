@@ -10,6 +10,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { user, userProfile, loading, setLoading } = useAuthState();
 
+  const isAdmin = userProfile?.role === 'admin';
+
   const signUp = async (email: string, password: string, fullName: string, referralCode?: string) => {
     try {
       setLoading(true);
@@ -58,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     userProfile,
     loading,
+    isAdmin,
     signUp,
     signIn,
     signOut,
