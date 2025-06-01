@@ -22,9 +22,7 @@ const Index = () => {
 
   useEffect(() => {
     if (user && userProfile) {
-      if (userProfile.is_paid) {
-        navigate('/workspace');
-      }
+      navigate('/workspace');
     }
   }, [user, userProfile, navigate]);
 
@@ -47,41 +45,6 @@ const Index = () => {
       setLoading(false);
     }
   };
-
-  // Show paid member message if user is logged in but not paid
-  if (user && userProfile && !userProfile.is_paid) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md shadow-xl">
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-              <img 
-                src="/lovable-uploads/bf6a79a0-729c-4263-ac44-d1f2cda8c9cb.png" 
-                alt="Clar Catalyst Logo" 
-                className="h-16 w-auto"
-              />
-            </div>
-            <CardTitle className="text-2xl font-bold text-gray-900">Access Restricted</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center">
-            <p className="text-gray-600 mb-6">
-              This app is exclusively for paid members only. To become a member or upgrade your membership, call this number.
-            </p>
-            <div className="bg-orange-100 p-4 rounded-lg mb-4">
-              <p className="text-orange-800 font-semibold">+91 9876543210</p>
-            </div>
-            <Button 
-              onClick={() => navigate('/')} 
-              variant="outline" 
-              className="w-full"
-            >
-              Back to Login
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
