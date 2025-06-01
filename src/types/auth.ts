@@ -8,6 +8,7 @@ export interface UserProfile {
   referral_code: string;
   referred_by?: string;
   is_paid: boolean;
+  profile_picture?: string;
   created_at: string;
   updated_at: string;
 }
