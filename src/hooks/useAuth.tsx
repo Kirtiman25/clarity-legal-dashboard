@@ -34,12 +34,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state change:', event, session?.user?.email);
-      setUser(session?.user ?? null);
-      if (session?.user) {
+      
+      // Handle email confirmation
+      if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
+        console.log('Email confirmed, user signed in');
+        setUser(session.user);
         await fetchUserProfile(session.user.id);
+        toast({
+          title: "Welcome!",
+          description: "Your email has been verified and you're now signed in.",
+        });
       } else {
-        setUserProfile(null);
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          await fetchUserProfile(session.user.id);
+        } else {
+          setUserProfile(null);
+        }
       }
+      
       setLoading(false);
     });
 
@@ -69,13 +82,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, fullName: string, referralCode?: string) => {
     try {
       console.log('Attempting signup for:', email);
-      const redirectUrl = `${window.location.origin}/`;
+      
+      // Use the current origin for redirect
+      const currentUrl = window.location.origin;
+      console.log('Using redirect URL:', currentUrl);
       
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: redirectUrl,
+          emailRedirectTo: currentUrl,
           data: {
             full_name: fullName,
             referred_by: referralCode || null
@@ -93,12 +109,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data.user && !data.user.email_confirmed_at) {
         toast({
           title: "Check Your Email",
-          description: "We've sent you a confirmation link. Please check your email and click the link to verify your account before signing in.",
+          description: "We've sent you a confirmation link. Please check your email and click the link to verify your account.",
         });
-      } else {
+      } else if (data.user?.email_confirmed_at) {
         toast({
           title: "Account Created",
-          description: "Your account has been created successfully!",
+          description: "Your account has been created and verified successfully!",
         });
       }
     } catch (error: any) {
