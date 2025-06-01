@@ -1,15 +1,9 @@
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { AlertCircle, FileText, Phone, CheckSquare } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Header from '@/components/Header';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import TaskList from '@/components/tasks/TaskList';
 import { fetchUserTasks, completeTask, type Task } from '@/services/taskService';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -46,252 +40,17 @@ const Tasks = () => {
     }
   };
 
-  const getTaskIcon = (type: string) => {
-    switch (type) {
-      case 'pending_payment':
-        return <AlertCircle className="h-5 w-5 text-white" />;
-      case 'submit_documents':
-        return <FileText className="h-5 w-5 text-white" />;
-      case 'follow_up':
-        return <Phone className="h-5 w-5 text-white" />;
-      default:
-        return <AlertCircle className="h-5 w-5 text-white" />;
-    }
-  };
-
-  const getTaskColor = (type: string) => {
-    switch (type) {
-      case 'pending_payment':
-        return 'bg-red-500';
-      case 'submit_documents':
-        return 'bg-blue-500';
-      case 'follow_up':
-        return 'bg-green-500';
-      default:
-        return 'bg-gray-500';
-    }
-  };
-
-  const getTaskBadgeColor = (type: string) => {
-    switch (type) {
-      case 'pending_payment':
-        return 'destructive';
-      case 'submit_documents':
-        return 'default';
-      case 'follow_up':
-        return 'secondary';
-      default:
-        return 'default';
-    }
-  };
-
-  const TaskDetailModal = ({ task }: { task: Task }) => {
-    const [paymentInfo, setPaymentInfo] = useState('');
-    const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-
-    const handleTaskSubmit = async () => {
-      const updateData: any = {};
-      
-      if (task.task_type === 'pending_payment' && paymentInfo) {
-        updateData.payment_info = paymentInfo;
-      }
-      
-      if (task.task_type === 'submit_documents' && uploadedFile) {
-        // In a real app, you'd upload the file to storage first
-        updateData.uploaded_documents = [uploadedFile.name];
-      }
-
-      await handleCompleteTask(task.id, updateData);
-    };
-
-    // Helper function to safely parse documents
-    const getDocumentsList = (documents: any): string[] => {
-      if (!documents) return [];
-      if (typeof documents === 'string') {
-        try {
-          return JSON.parse(documents);
-        } catch {
-          return [];
-        }
-      }
-      if (Array.isArray(documents)) {
-        return documents.filter(doc => typeof doc === 'string');
-      }
-      return [];
-    };
-
-    // Helper function to safely get string value
-    const getStringValue = (value: any): string => {
-      if (typeof value === 'string') return value;
-      if (value === null || value === undefined) return '';
-      return String(value);
-    };
-
-    return (
-      <Dialog>
-        <DialogTrigger asChild>
-          <Card className="cursor-pointer hover:shadow-lg transition-all duration-200">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center space-x-3">
-                  <div className={`${getTaskColor(task.task_type)} p-2 rounded-lg`}>
-                    {getTaskIcon(task.task_type)}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{getStringValue(task.title)}</h3>
-                    <p className="text-sm text-gray-600">{getStringValue(task.case_name)}</p>
-                  </div>
-                </div>
-                <Badge variant={getTaskBadgeColor(task.task_type)}>
-                  {getStringValue(task.status)}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-        </DialogTrigger>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{getStringValue(task.title)}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            {task.task_type === 'pending_payment' && (
-              <>
-                {task.client_name && (
-                  <div>
-                    <Label>Client Name</Label>
-                    <p className="font-semibold">{getStringValue(task.client_name)}</p>
-                  </div>
-                )}
-                {task.case_name && (
-                  <div>
-                    <Label>Case Name</Label>
-                    <p className="font-semibold">{getStringValue(task.case_name)}</p>
-                  </div>
-                )}
-                {task.invoice_amount && (
-                  <div>
-                    <Label>Invoice Amount</Label>
-                    <p className="font-semibold text-green-600">{getStringValue(task.invoice_amount)}</p>
-                  </div>
-                )}
-                <div>
-                  <Label htmlFor="payment-info">Payment Information</Label>
-                  <Input 
-                    id="payment-info" 
-                    placeholder="Enter payment details"
-                    value={paymentInfo}
-                    onChange={(e) => setPaymentInfo(e.target.value)}
-                  />
-                </div>
-              </>
-            )}
-            
-            {task.task_type === 'submit_documents' && (
-              <>
-                {task.client_name && (
-                  <div>
-                    <Label>Client Name</Label>
-                    <p className="font-semibold">{getStringValue(task.client_name)}</p>
-                  </div>
-                )}
-                {task.case_name && (
-                  <div>
-                    <Label>Case Name</Label>
-                    <p className="font-semibold">{getStringValue(task.case_name)}</p>
-                  </div>
-                )}
-                {task.documents && (
-                  <div>
-                    <Label>Required Documents</Label>
-                    <ul className="list-disc list-inside space-y-1">
-                      {getDocumentsList(task.documents).map((doc: string, index: number) => (
-                        <li key={index} className="text-sm">{doc}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                <div>
-                  <Label htmlFor="document-upload">Upload Documents (PDF)</Label>
-                  <Input 
-                    id="document-upload" 
-                    type="file" 
-                    accept=".pdf"
-                    onChange={(e) => setUploadedFile(e.target.files?.[0] || null)}
-                  />
-                </div>
-              </>
-            )}
-            
-            {task.task_type === 'follow_up' && (
-              <>
-                {task.case_name && (
-                  <div>
-                    <Label>Case Name</Label>
-                    <p className="font-semibold">{getStringValue(task.case_name)}</p>
-                  </div>
-                )}
-                {task.last_update && (
-                  <div>
-                    <Label>Last Update</Label>
-                    <p className="font-semibold">{getStringValue(task.last_update)}</p>
-                  </div>
-                )}
-                {task.admin_note && (
-                  <div>
-                    <Label>Admin Note</Label>
-                    <p className="text-sm bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                      {getStringValue(task.admin_note)}
-                    </p>
-                  </div>
-                )}
-              </>
-            )}
-            
-            <Button className="w-full" onClick={handleTaskSubmit}>
-              Complete Task
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  };
-
-  if (loading) {
-    return (
-      <ProtectedRoute>
-        <div className="min-h-screen bg-gray-50">
-          <Header title="Tasks" />
-          <div className="container mx-auto px-4 pt-20 pb-24">
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500 mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading tasks...</p>
-            </div>
-          </div>
-          <Navigation />
-        </div>
-      </ProtectedRoute>
-    );
-  }
-
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
         <Header title="Tasks" />
         
         <div className="container mx-auto px-4 pt-20 pb-24">
-          <div className="space-y-4">
-            {tasks.map((task) => (
-              <TaskDetailModal key={task.id} task={task} />
-            ))}
-          </div>
-          
-          {tasks.length === 0 && (
-            <div className="text-center py-12">
-              <CheckSquare className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-600">No tasks available</h3>
-              <p className="text-gray-500">All your tasks are completed!</p>
-            </div>
-          )}
+          <TaskList 
+            tasks={tasks}
+            loading={loading}
+            onCompleteTask={handleCompleteTask}
+          />
         </div>
 
         <Navigation />
