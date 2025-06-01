@@ -1,24 +1,9 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import type { Tables } from '@/integrations/supabase/types';
 
-export interface Task {
-  id: string;
-  user_id: string;
-  task_type: 'pending_payment' | 'submit_documents' | 'follow_up' | 'court_hearing' | 'client_meeting' | 'document_review';
-  title: string;
-  client_name?: string;
-  case_name?: string;
-  invoice_amount?: string;
-  documents?: any;
-  admin_note?: string;
-  last_update?: string;
-  status: string;
-  completed_at?: string;
-  payment_info?: string;
-  uploaded_documents?: string[];
-  created_at: string;
-}
+export type Task = Tables<'tasks'>;
 
 export const fetchUserTasks = async (): Promise<Task[]> => {
   try {
