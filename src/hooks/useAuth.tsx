@@ -21,42 +21,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      
       console.log('Initial session:', session?.user?.email);
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchUserProfile(session.user.id);
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+      
       console.log('Auth state change:', event, session?.user?.email);
       
-      // Handle email confirmation
-      if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
-        console.log('Email confirmed, user signed in');
-        setUser(session.user);
-        await fetchUserProfile(session.user.id);
-        toast({
-          title: "Welcome!",
-          description: "Your email has been verified and you're now signed in.",
-        });
-      } else {
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          await fetchUserProfile(session.user.id);
-        } else {
-          setUserProfile(null);
-        }
-      }
+      setUser(session?.user ?? null);
       
-      setLoading(false);
+      if (session?.user) {
+        await fetchUserProfile(session.user.id);
+        
+        if (event === 'SIGNED_IN') {
+          toast({
+            title: "Welcome!",
+            description: "You have been signed in successfully.",
+          });
+        }
+      } else {
+        setUserProfile(null);
+        setLoading(false);
+      }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const fetchUserProfile = async (userId: string) => {
@@ -70,20 +76,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('Profile fetch error:', error);
-        throw error;
+        // Don't throw error, just set loading to false
+        setLoading(false);
+        return;
       }
+      
       console.log('User profile fetched:', data);
       setUserProfile(data);
+      setLoading(false);
     } catch (error) {
       console.error('Error fetching user profile:', error);
+      setLoading(false);
     }
   };
 
   const signUp = async (email: string, password: string, fullName: string, referralCode?: string) => {
     try {
+      setLoading(true);
       console.log('Attempting signup for:', email);
       
-      // Use the current origin for redirect
       const currentUrl = window.location.origin;
       console.log('Using redirect URL:', currentUrl);
       
@@ -101,24 +112,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('Signup error:', error);
+        setLoading(false);
         throw error;
       }
 
       console.log('Signup response:', data);
 
       if (data.user && !data.user.email_confirmed_at) {
+        setLoading(false);
         toast({
           title: "Check Your Email",
           description: "We've sent you a confirmation link. Please check your email and click the link to verify your account.",
         });
-      } else if (data.user?.email_confirmed_at) {
-        toast({
-          title: "Account Created",
-          description: "Your account has been created and verified successfully!",
-        });
       }
     } catch (error: any) {
       console.error('Signup error:', error);
+      setLoading(false);
       toast({
         title: "Signup Failed",
         description: error.message,
@@ -130,6 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
+      setLoading(true);
       console.log('Attempting signin for:', email);
       
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -141,31 +151,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('Signin error details:', error);
+        setLoading(false);
         throw error;
       }
 
-      if (data.user) {
-        console.log('Signin successful for user:', data.user.email);
-        toast({
-          title: "Welcome Back",
-          description: "You have been signed in successfully!",
-        });
-      }
+      // Don't set loading to false here - let the auth state change handle it
+      console.log('Signin successful for user:', data.user.email);
     } catch (error: any) {
       console.error('Signin error:', error);
+      setLoading(false);
       
       let errorMessage = error.message;
       
-      // Handle specific error cases with more detailed logging
       if (error.message.includes('Email not confirmed')) {
-        console.log('Email not confirmed error detected');
-        errorMessage = "Please check your email and click the confirmation link before signing in. If you can't find the email, try signing up again.";
+        errorMessage = "Please check your email and click the confirmation link before signing in.";
       } else if (error.message.includes('Invalid login credentials')) {
-        console.log('Invalid credentials error detected');
         errorMessage = "Invalid email or password. Please check your credentials and try again.";
-      } else if (error.message.includes('User not found')) {
-        console.log('User not found error detected');
-        errorMessage = "No account found with this email. Please sign up first.";
       }
       
       toast({

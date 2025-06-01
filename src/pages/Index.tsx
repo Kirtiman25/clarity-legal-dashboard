@@ -16,35 +16,49 @@ const Index = () => {
     password: '',
     referralCode: ''
   });
-  const [loading, setLoading] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
   const navigate = useNavigate();
-  const { user, userProfile, signUp, signIn } = useAuth();
+  const { user, userProfile, loading: authLoading, signUp, signIn } = useAuth();
 
   useEffect(() => {
-    if (user && userProfile) {
+    console.log('Index - Auth state:', { user: user?.email, userProfile: !!userProfile, authLoading });
+    
+    if (!authLoading && user && userProfile) {
+      console.log('Redirecting to workspace');
       navigate('/workspace');
     }
-  }, [user, userProfile, navigate]);
+  }, [user, userProfile, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setFormLoading(true);
     
     try {
       if (isLogin) {
         await signIn(formData.email, formData.password);
       } else {
         await signUp(formData.email, formData.password, formData.fullName, formData.referralCode);
-        // After successful signup, switch to login mode
         setIsLogin(true);
         setFormData({ ...formData, password: '', fullName: '', referralCode: '' });
       }
     } catch (error) {
       // Error handling is done in the auth hook
     } finally {
-      setLoading(false);
+      setFormLoading(false);
     }
   };
+
+  // Show loading spinner while checking auth state
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -132,9 +146,9 @@ const Index = () => {
             <Button 
               type="submit" 
               className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white font-semibold"
-              disabled={loading}
+              disabled={formLoading}
             >
-              {loading ? 'Loading...' : (isLogin ? 'Sign In' : 'Create Account')}
+              {formLoading ? 'Loading...' : (isLogin ? 'Sign In' : 'Create Account')}
             </Button>
           </form>
           
