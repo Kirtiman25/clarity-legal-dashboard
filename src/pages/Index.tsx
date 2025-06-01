@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/useAuth';
+import { useSecureAuth } from '@/hooks/useSecureAuth';
+import { sanitizeText } from '@/lib/validation';
 
 const Index = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -16,9 +18,9 @@ const Index = () => {
     password: '',
     referralCode: ''
   });
-  const [formLoading, setFormLoading] = useState(false);
   const navigate = useNavigate();
-  const { user, userProfile, loading: authLoading, signUp, signIn } = useAuth();
+  const { user, userProfile, loading: authLoading } = useAuth();
+  const { signUp, signIn, isSubmitting } = useSecureAuth();
 
   useEffect(() => {
     console.log('Index - Auth state:', { user: user?.email, userProfile: !!userProfile, authLoading });
@@ -29,9 +31,14 @@ const Index = () => {
     }
   }, [user, userProfile, authLoading, navigate]);
 
+  const handleInputChange = (field: string, value: string) => {
+    // Sanitize input in real-time
+    const sanitizedValue = field === 'email' ? value.toLowerCase().trim() : sanitizeText(value);
+    setFormData(prev => ({ ...prev, [field]: sanitizedValue }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFormLoading(true);
     
     try {
       if (isLogin) {
@@ -42,9 +49,8 @@ const Index = () => {
         setFormData({ ...formData, password: '', fullName: '', referralCode: '' });
       }
     } catch (error) {
-      // Error handling is done in the auth hook
-    } finally {
-      setFormLoading(false);
+      console.error('Auth error:', error);
+      // Error handling is done in the secure auth hook
     }
   };
 
@@ -96,9 +102,10 @@ const Index = () => {
                   type="text"
                   placeholder="Enter your full name"
                   value={formData.fullName}
-                  onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+                  onChange={(e) => handleInputChange('fullName', e.target.value)}
                   required={!isLogin}
                   className="h-12"
+                  maxLength={50}
                 />
               </div>
             )}
@@ -110,9 +117,10 @@ const Index = () => {
                 type="email"
                 placeholder="Enter your email"
                 value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                onChange={(e) => handleInputChange('email', e.target.value)}
                 required
                 className="h-12"
+                maxLength={254}
               />
             </div>
             
@@ -121,11 +129,12 @@ const Index = () => {
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder={isLogin ? "Enter your password" : "Min 8 chars, 1 upper, 1 lower, 1 number"}
                 value={formData.password}
                 onChange={(e) => setFormData({...formData, password: e.target.value})}
                 required
                 className="h-12"
+                maxLength={128}
               />
             </div>
             
@@ -137,8 +146,9 @@ const Index = () => {
                   type="text"
                   placeholder="Enter referral code"
                   value={formData.referralCode}
-                  onChange={(e) => setFormData({...formData, referralCode: e.target.value})}
+                  onChange={(e) => handleInputChange('referralCode', e.target.value)}
                   className="h-12"
+                  maxLength={6}
                 />
               </div>
             )}
@@ -146,9 +156,9 @@ const Index = () => {
             <Button 
               type="submit" 
               className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white font-semibold"
-              disabled={formLoading}
+              disabled={isSubmitting}
             >
-              {formLoading ? 'Loading...' : (isLogin ? 'Sign In' : 'Create Account')}
+              {isSubmitting ? 'Loading...' : (isLogin ? 'Sign In' : 'Create Account')}
             </Button>
           </form>
           
@@ -159,6 +169,7 @@ const Index = () => {
                 type="button"
                 onClick={() => setIsLogin(!isLogin)}
                 className="ml-2 font-semibold text-orange-600 hover:text-orange-800"
+                disabled={isSubmitting}
               >
                 {isLogin ? 'Sign up' : 'Sign in'}
               </button>
