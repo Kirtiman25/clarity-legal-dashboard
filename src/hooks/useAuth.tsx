@@ -23,6 +23,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session:', session?.user?.email);
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchUserProfile(session.user.id);
@@ -47,13 +48,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log('Fetching profile for user:', userId);
       const { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('id', userId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Profile fetch error:', error);
+        throw error;
+      }
+      console.log('User profile fetched:', data);
       setUserProfile(data);
     } catch (error) {
       console.error('Error fetching user profile:', error);
@@ -62,6 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string, fullName: string, referralCode?: string) => {
     try {
+      console.log('Attempting signup for:', email);
       const redirectUrl = `${window.location.origin}/`;
       
       const { data, error } = await supabase.auth.signUp({
@@ -76,7 +83,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Signup error:', error);
+        throw error;
+      }
+
+      console.log('Signup response:', data);
 
       if (data.user && !data.user.email_confirmed_at) {
         toast({
@@ -102,27 +114,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log('Attempting signin for:', email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      console.log('Signin response:', data, error);
 
-      toast({
-        title: "Welcome Back",
-        description: "You have been signed in successfully!",
-      });
+      if (error) {
+        console.error('Signin error details:', error);
+        throw error;
+      }
+
+      if (data.user) {
+        console.log('Signin successful for user:', data.user.email);
+        toast({
+          title: "Welcome Back",
+          description: "You have been signed in successfully!",
+        });
+      }
     } catch (error: any) {
       console.error('Signin error:', error);
       
       let errorMessage = error.message;
       
-      // Handle specific error cases
+      // Handle specific error cases with more detailed logging
       if (error.message.includes('Email not confirmed')) {
-        errorMessage = "Please check your email and click the confirmation link before signing in.";
+        console.log('Email not confirmed error detected');
+        errorMessage = "Please check your email and click the confirmation link before signing in. If you can't find the email, try signing up again.";
       } else if (error.message.includes('Invalid login credentials')) {
+        console.log('Invalid credentials error detected');
         errorMessage = "Invalid email or password. Please check your credentials and try again.";
+      } else if (error.message.includes('User not found')) {
+        console.log('User not found error detected');
+        errorMessage = "No account found with this email. Please sign up first.";
       }
       
       toast({
@@ -136,14 +163,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
+      console.log('Attempting signout');
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
+      console.log('Signout successful');
       toast({
         title: "Logged Out",
         description: "You have been successfully logged out",
       });
     } catch (error: any) {
+      console.error('Signout error:', error);
       toast({
         title: "Error",
         description: error.message,
