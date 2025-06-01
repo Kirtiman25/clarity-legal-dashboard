@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
       
       console.log('Auth state change:', event, session?.user?.email);
@@ -45,7 +45,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        await fetchUserProfile(session.user.id);
+        // Fetch profile for signed in user
+        fetchUserProfile(session.user.id);
         
         if (event === 'SIGNED_IN') {
           toast({
@@ -76,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('Profile fetch error:', error);
-        // Don't throw error, just set loading to false
+        // Always set loading to false, even on error
         setLoading(false);
         return;
       }
@@ -119,11 +120,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('Signup response:', data);
 
       if (data.user && !data.user.email_confirmed_at) {
+        console.log('Email not confirmed, setting loading to false');
         setLoading(false);
         toast({
           title: "Check Your Email",
           description: "We've sent you a confirmation link. Please check your email and click the link to verify your account.",
         });
+      } else if (data.user && data.user.email_confirmed_at) {
+        console.log('Email confirmed, user signed in');
+        // Don't set loading to false here - let auth state change handle it
       }
     } catch (error: any) {
       console.error('Signup error:', error);
