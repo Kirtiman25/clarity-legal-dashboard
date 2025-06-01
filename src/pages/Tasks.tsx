@@ -104,6 +104,29 @@ const Tasks = () => {
       await handleCompleteTask(task.id, updateData);
     };
 
+    // Helper function to safely parse documents
+    const getDocumentsList = (documents: any): string[] => {
+      if (!documents) return [];
+      if (typeof documents === 'string') {
+        try {
+          return JSON.parse(documents);
+        } catch {
+          return [];
+        }
+      }
+      if (Array.isArray(documents)) {
+        return documents.filter(doc => typeof doc === 'string');
+      }
+      return [];
+    };
+
+    // Helper function to safely get string value
+    const getStringValue = (value: any): string => {
+      if (typeof value === 'string') return value;
+      if (value === null || value === undefined) return '';
+      return String(value);
+    };
+
     return (
       <Dialog>
         <DialogTrigger asChild>
@@ -115,12 +138,12 @@ const Tasks = () => {
                     {getTaskIcon(task.task_type)}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">{task.title}</h3>
-                    <p className="text-sm text-gray-600">{task.case_name}</p>
+                    <h3 className="font-semibold text-gray-900">{getStringValue(task.title)}</h3>
+                    <p className="text-sm text-gray-600">{getStringValue(task.case_name)}</p>
                   </div>
                 </div>
                 <Badge variant={getTaskBadgeColor(task.task_type)}>
-                  {task.status}
+                  {getStringValue(task.status)}
                 </Badge>
               </div>
             </CardContent>
@@ -128,7 +151,7 @@ const Tasks = () => {
         </DialogTrigger>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{task.title}</DialogTitle>
+            <DialogTitle>{getStringValue(task.title)}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             {task.task_type === 'pending_payment' && (
@@ -136,19 +159,19 @@ const Tasks = () => {
                 {task.client_name && (
                   <div>
                     <Label>Client Name</Label>
-                    <p className="font-semibold">{task.client_name}</p>
+                    <p className="font-semibold">{getStringValue(task.client_name)}</p>
                   </div>
                 )}
                 {task.case_name && (
                   <div>
                     <Label>Case Name</Label>
-                    <p className="font-semibold">{task.case_name}</p>
+                    <p className="font-semibold">{getStringValue(task.case_name)}</p>
                   </div>
                 )}
                 {task.invoice_amount && (
                   <div>
                     <Label>Invoice Amount</Label>
-                    <p className="font-semibold text-green-600">{task.invoice_amount}</p>
+                    <p className="font-semibold text-green-600">{getStringValue(task.invoice_amount)}</p>
                   </div>
                 )}
                 <div>
@@ -168,20 +191,20 @@ const Tasks = () => {
                 {task.client_name && (
                   <div>
                     <Label>Client Name</Label>
-                    <p className="font-semibold">{task.client_name}</p>
+                    <p className="font-semibold">{getStringValue(task.client_name)}</p>
                   </div>
                 )}
                 {task.case_name && (
                   <div>
                     <Label>Case Name</Label>
-                    <p className="font-semibold">{task.case_name}</p>
+                    <p className="font-semibold">{getStringValue(task.case_name)}</p>
                   </div>
                 )}
                 {task.documents && (
                   <div>
                     <Label>Required Documents</Label>
                     <ul className="list-disc list-inside space-y-1">
-                      {JSON.parse(task.documents).map((doc: string, index: number) => (
+                      {getDocumentsList(task.documents).map((doc: string, index: number) => (
                         <li key={index} className="text-sm">{doc}</li>
                       ))}
                     </ul>
@@ -204,20 +227,20 @@ const Tasks = () => {
                 {task.case_name && (
                   <div>
                     <Label>Case Name</Label>
-                    <p className="font-semibold">{task.case_name}</p>
+                    <p className="font-semibold">{getStringValue(task.case_name)}</p>
                   </div>
                 )}
                 {task.last_update && (
                   <div>
                     <Label>Last Update</Label>
-                    <p className="font-semibold">{task.last_update}</p>
+                    <p className="font-semibold">{getStringValue(task.last_update)}</p>
                   </div>
                 )}
                 {task.admin_note && (
                   <div>
                     <Label>Admin Note</Label>
                     <p className="text-sm bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                      {task.admin_note}
+                      {getStringValue(task.admin_note)}
                     </p>
                   </div>
                 )}
