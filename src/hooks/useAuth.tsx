@@ -15,14 +15,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, fullName: string, referralCode?: string) => {
     try {
       setLoading(true);
+      console.log('Starting signup process for:', email);
       await signUpUser(email, password, fullName, referralCode);
+      console.log('Signup completed successfully');
       toast({
         title: "Account Created!",
         description: "Welcome to the platform. You can now sign in.",
       });
       setLoading(false);
     } catch (error: any) {
-      console.error('Signup error:', error);
+      console.error('Signup error in useAuth:', error);
       toast({
         title: "Signup Failed",
         description: error.message,
@@ -36,9 +38,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
+      console.log('Starting signin process for:', email);
       await signInUser(email, password);
+      console.log('Signin completed successfully');
       // Loading will be set to false by the auth state change
     } catch (error: any) {
+      console.error('Signin error in useAuth:', error);
       setLoading(false);
       throw error;
     }
@@ -46,9 +51,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
+      console.log('Starting signout process');
       await signOutUser();
+      console.log('Signout completed successfully');
     } catch (error: any) {
-      console.error('Signout error:', error);
+      console.error('Signout error in useAuth:', error);
       toast({
         title: "Error",
         description: error.message,
