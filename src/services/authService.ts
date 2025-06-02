@@ -34,7 +34,7 @@ export const createUserProfile = async (
   try {
     console.log('Creating user profile for:', email);
     
-    // Generate a unique referral code
+    // Generate a simple referral code
     const userReferralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
     
     const { data, error } = await supabase
@@ -88,23 +88,7 @@ export const signUpUser = async (
     throw error;
   }
 
-  console.log('Signup response:', data);
-
-  // If user is created but not confirmed, manually create profile
-  if (data.user && !data.session) {
-    console.log('User created but needs confirmation, creating profile manually');
-    await createUserProfile(data.user.id, email, fullName, referralCode);
-  }
-
-  // If user is immediately signed in, the trigger should handle profile creation
-  if (data.user && data.session) {
-    console.log('User signed up and logged in successfully');
-    toast({
-      title: "Welcome!",
-      description: "Your account has been created successfully.",
-    });
-  }
-
+  console.log('Signup successful');
   return data;
 };
 
@@ -123,8 +107,6 @@ export const signInUser = async (email: string, password: string) => {
     
     if (error.message.includes('Invalid login credentials')) {
       errorMessage = "Invalid email or password. Please check your credentials and try again.";
-    } else if (error.message.includes('Email not confirmed')) {
-      errorMessage = "Please check your email and click the confirmation link before signing in.";
     }
     
     throw new Error(errorMessage);

@@ -16,6 +16,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       await signUpUser(email, password, fullName, referralCode);
+      toast({
+        title: "Account Created!",
+        description: "Welcome to the platform. You can now sign in.",
+      });
     } catch (error: any) {
       console.error('Signup error:', error);
       setLoading(false);

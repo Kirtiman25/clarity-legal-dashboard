@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { fetchUserProfile, createUserProfile } from '@/services/authService';
 import type { UserProfile } from '@/types/auth';
 
 export function useAuthState() {
@@ -14,7 +13,7 @@ export function useAuthState() {
   useEffect(() => {
     let mounted = true;
 
-    // Get initial session
+    // Get initial session immediately
     const getInitialSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -74,28 +73,83 @@ export function useAuthState() {
     try {
       console.log('Handling user profile for:', user.id);
       
-      // Try to fetch existing profile
-      let profile = await fetchUserProfile(user.id);
-      
-      // If no profile exists, create one
-      if (!profile) {
-        console.log('No profile found, creating new profile');
-        const fullName = user.user_metadata?.full_name || 'User';
-        const referredBy = user.user_metadata?.referred_by || null;
-        
-        profile = await createUserProfile(user.id, user.email!, fullName, referredBy);
-      }
-      
-      if (profile) {
+      // First try to fetch existing profile with a timeout
+      const profilePromise = supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      const { data: profile, error } = await Promise.race([
+        profilePromise,
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
+        )
+      ]) as any;
+
+      if (profile && !error) {
+        console.log('Profile found:', profile.email);
         setUserProfile(profile);
-        console.log('Profile set successfully:', profile.email);
+        setLoading(false);
+        return;
+      }
+
+      // If no profile exists or fetch failed, create one quickly
+      console.log('Creating new profile');
+      const fullName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
+      const referredBy = user.user_metadata?.referred_by || null;
+      
+      // Generate simple referral code
+      const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+      
+      const { data: newProfile, error: createError } = await supabase
+        .from('users')
+        .insert({
+          id: user.id,
+          email: user.email!,
+          full_name: fullName,
+          referral_code: referralCode,
+          referred_by: referredBy,
+          is_paid: false,
+          role: 'user'
+        })
+        .select()
+        .single();
+
+      if (newProfile && !createError) {
+        console.log('Profile created successfully:', newProfile.email);
+        setUserProfile(newProfile);
       } else {
-        console.error('Failed to create or fetch user profile');
+        console.error('Failed to create profile:', createError);
+        // Continue anyway - user can still use the app
+        setUserProfile({
+          id: user.id,
+          email: user.email!,
+          full_name: fullName,
+          referral_code: referralCode,
+          referred_by: referredBy,
+          is_paid: false,
+          role: 'user',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        } as UserProfile);
       }
       
       setLoading(false);
     } catch (error) {
       console.error('Error handling user profile:', error);
+      // Don't block the user - continue with minimal profile
+      setUserProfile({
+        id: user.id,
+        email: user.email!,
+        full_name: user.email?.split('@')[0] || 'User',
+        referral_code: 'TEMP123',
+        referred_by: null,
+        is_paid: false,
+        role: 'user',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      } as UserProfile);
       setLoading(false);
     }
   };
