@@ -1,3 +1,4 @@
+
 import { createContext, useContext, ReactNode } from 'react';
 import { useAuthState } from './useAuthState';
 import { signUpUser, signInUser, signOutUser } from '@/services/authService';
@@ -16,11 +17,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       console.log('Starting signup process for:', email);
       
-      const result = await signUpUser(email, password, fullName, referralCode);
+      await signUpUser(email, password, fullName, referralCode);
       console.log('Signup completed successfully');
       
       // Don't show additional toast here as authService already handles it
-      return result;
       
     } catch (error: any) {
       console.error('Signup error in useAuth:', error);
