@@ -15,17 +15,28 @@ export function useAuthState() {
     let mounted = true;
 
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return;
-      
-      console.log('Initial session:', session?.user?.email);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        handleUserProfile(session.user.id);
-      } else {
-        setLoading(false);
+    const getInitialSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!mounted) return;
+        
+        console.log('Initial session:', session?.user?.email);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          await handleUserProfile(session.user.id);
+        } else {
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error getting initial session:', error);
+        if (mounted) {
+          setLoading(false);
+        }
       }
-    });
+    };
+
+    getInitialSession();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -36,7 +47,6 @@ export function useAuthState() {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        // Handle different auth events
         if (event === 'SIGNED_IN') {
           toast({
             title: "Welcome!",
@@ -46,8 +56,7 @@ export function useAuthState() {
           console.log('Token refreshed for user:', session.user.email);
         }
         
-        // Fetch profile for signed in user
-        handleUserProfile(session.user.id);
+        await handleUserProfile(session.user.id);
       } else {
         setUserProfile(null);
         setLoading(false);
@@ -74,7 +83,6 @@ export function useAuthState() {
         console.log('Profile set successfully:', profile.email);
       } else {
         console.error('Failed to fetch or create user profile');
-        // Don't redirect immediately, give user a chance to retry
         toast({
           title: "Profile Error",
           description: "There was an issue loading your profile. Please try refreshing the page.",

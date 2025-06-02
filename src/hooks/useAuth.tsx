@@ -1,9 +1,11 @@
+
 import { createContext, useContext, ReactNode } from 'react';
 import { useAuthState } from './useAuthState';
 import { signUpUser, signInUser, signOutUser } from '@/services/authService';
 import { toast } from '@/hooks/use-toast';
 import type { AuthContextType } from '@/types/auth';
 
+// Create the context with undefined as default
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -16,11 +18,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       const data = await signUpUser(email, password, fullName, referralCode);
       
-      // If email confirmation is required, keep loading false so user can see the message
       if (data.user && !data.user.email_confirmed_at) {
         setLoading(false);
       }
-      // If user is automatically confirmed, let auth state change handle loading
     } catch (error: any) {
       console.error('Signup error:', error);
       setLoading(false);
@@ -37,10 +37,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       await signInUser(email, password);
-      // Don't set loading to false here - let the auth state change handle it
     } catch (error: any) {
       setLoading(false);
-      // Error is already handled in signInUser with toast
       throw error;
     }
   };
@@ -58,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const value = {
+  const value: AuthContextType = {
     user,
     userProfile,
     loading,
@@ -71,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth() {
+export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
