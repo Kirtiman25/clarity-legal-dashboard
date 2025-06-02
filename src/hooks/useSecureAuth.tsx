@@ -88,6 +88,14 @@ export function useSecureAuth() {
     setIsSubmitting(true);
     try {
       await originalSignIn(validation.data.email, validation.data.password);
+    } catch (error: any) {
+      // Show user-friendly error message
+      toast({
+        title: "Sign In Failed",
+        description: error.message || "Please check your credentials and try again.",
+        variant: "destructive",
+      });
+      throw error;
     } finally {
       setIsSubmitting(false);
     }

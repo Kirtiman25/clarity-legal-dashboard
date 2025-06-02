@@ -1,4 +1,3 @@
-
 import { createContext, useContext, ReactNode } from 'react';
 import { useAuthState } from './useAuthState';
 import { signUpUser, signInUser, signOutUser } from '@/services/authService';
@@ -17,9 +16,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       const data = await signUpUser(email, password, fullName, referralCode);
       
+      // If email confirmation is required, keep loading false so user can see the message
       if (data.user && !data.user.email_confirmed_at) {
         setLoading(false);
       }
+      // If user is automatically confirmed, let auth state change handle loading
     } catch (error: any) {
       console.error('Signup error:', error);
       setLoading(false);
@@ -39,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Don't set loading to false here - let the auth state change handle it
     } catch (error: any) {
       setLoading(false);
+      // Error is already handled in signInUser with toast
       throw error;
     }
   };

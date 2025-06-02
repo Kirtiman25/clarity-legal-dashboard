@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import type { UserProfile } from '@/types/auth';
@@ -83,14 +84,15 @@ export const signUpUser = async (
 ) => {
   console.log('Attempting signup for:', email);
   
-  const currentUrl = window.location.origin;
-  console.log('Using redirect URL:', currentUrl);
+  // Use the current origin for redirect
+  const redirectUrl = `${window.location.origin}/`;
+  console.log('Using redirect URL:', redirectUrl);
   
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      emailRedirectTo: currentUrl,
+      emailRedirectTo: redirectUrl,
       data: {
         full_name: fullName,
         referred_by: referralCode || null
@@ -105,14 +107,20 @@ export const signUpUser = async (
 
   console.log('Signup response:', data);
 
+  // Check if user needs to confirm email
   if (data.user && !data.user.email_confirmed_at) {
-    console.log('Email not confirmed, showing toast');
+    console.log('Email confirmation required');
     toast({
       title: "Check Your Email",
-      description: "We've sent you a confirmation link. Please check your email and click the link to verify your account.",
+      description: "We've sent you a confirmation link. Please check your email and click the link to complete your registration.",
+      duration: 10000,
     });
   } else if (data.user && data.user.email_confirmed_at) {
-    console.log('Email confirmed, user signed in');
+    console.log('User signed up and confirmed automatically');
+    toast({
+      title: "Welcome!",
+      description: "Your account has been created successfully.",
+    });
   }
 
   return data;
@@ -126,28 +134,41 @@ export const signInUser = async (email: string, password: string) => {
     password,
   });
 
-  console.log('Signin response:', data, error);
-
   if (error) {
-    console.error('Signin error details:', error);
+    console.error('Signin error:', error);
     
     let errorMessage = error.message;
     
     if (error.message.includes('Email not confirmed')) {
       errorMessage = "Please check your email and click the confirmation link before signing in.";
+      
+      // Offer to resend confirmation email
+      toast({
+        title: "Email Not Confirmed",
+        description: errorMessage + " Would you like us to resend the confirmation email?",
+        variant: "destructive",
+        duration: 10000,
+      });
+      
+      // Optionally resend confirmation
+      try {
+        await supabase.auth.resend({
+          type: 'signup',
+          email: email
+        });
+        console.log('Resent confirmation email to:', email);
+      } catch (resendError) {
+        console.error('Failed to resend confirmation:', resendError);
+      }
+      
     } else if (error.message.includes('Invalid login credentials')) {
       errorMessage = "Invalid email or password. Please check your credentials and try again.";
     }
     
-    toast({
-      title: "Login Failed",
-      description: errorMessage,
-      variant: "destructive",
-    });
-    throw error;
+    throw new Error(errorMessage);
   }
 
-  console.log('Signin successful for user:', data.user.email);
+  console.log('Signin successful for user:', data.user?.email);
   return data;
 };
 

@@ -28,7 +28,7 @@ export function useAuthState() {
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
       
       console.log('Auth state change:', event, session?.user?.email);
@@ -36,18 +36,25 @@ export function useAuthState() {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        // Fetch profile for signed in user
-        handleUserProfile(session.user.id);
-        
+        // Handle different auth events
         if (event === 'SIGNED_IN') {
           toast({
             title: "Welcome!",
             description: "You have been signed in successfully.",
           });
+        } else if (event === 'TOKEN_REFRESHED') {
+          console.log('Token refreshed for user:', session.user.email);
         }
+        
+        // Fetch profile for signed in user
+        handleUserProfile(session.user.id);
       } else {
         setUserProfile(null);
         setLoading(false);
+        
+        if (event === 'SIGNED_OUT') {
+          console.log('User signed out');
+        }
       }
     });
 
