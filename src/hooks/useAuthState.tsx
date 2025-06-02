@@ -59,8 +59,21 @@ export function useAuthState() {
 
   const handleUserProfile = async (userId: string) => {
     try {
+      console.log('Handling user profile for:', userId);
       const profile = await fetchUserProfile(userId);
-      setUserProfile(profile);
+      
+      if (profile) {
+        setUserProfile(profile);
+        console.log('Profile set successfully:', profile.email);
+      } else {
+        console.error('Failed to fetch or create user profile');
+        // Don't redirect immediately, give user a chance to retry
+        toast({
+          title: "Profile Error",
+          description: "There was an issue loading your profile. Please try refreshing the page.",
+          variant: "destructive",
+        });
+      }
       setLoading(false);
     } catch (error) {
       console.error('Error handling user profile:', error);

@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import type { UserProfile } from '@/types/auth';
@@ -14,6 +13,12 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
 
     if (error) {
       console.error('Profile fetch error:', error);
+      
+      // If profile doesn't exist, create it
+      if (error.code === 'PGRST116') {
+        console.log('Profile not found, creating new profile for user:', userId);
+        return await createUserProfile(userId);
+      }
       return null;
     }
     
@@ -23,6 +28,51 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
     console.error('Error fetching user profile:', error);
     return null;
   }
+};
+
+const createUserProfile = async (userId: string): Promise<UserProfile | null> => {
+  try {
+    // Get user data from auth.users to create profile
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.error('No authenticated user found');
+      return null;
+    }
+
+    const profileData = {
+      id: userId,
+      email: user.email || '',
+      full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+      referral_code: generateReferralCode(),
+      referred_by: user.user_metadata?.referred_by || null,
+      role: 'user' as const,
+      is_paid: false
+    };
+
+    console.log('Creating user profile:', profileData);
+
+    const { data, error } = await supabase
+      .from('users')
+      .insert(profileData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating user profile:', error);
+      return null;
+    }
+
+    console.log('User profile created successfully:', data);
+    return data;
+  } catch (error) {
+    console.error('Error in createUserProfile:', error);
+    return null;
+  }
+};
+
+const generateReferralCode = (): string => {
+  return Math.random().toString(36).substring(2, 8).toUpperCase();
 };
 
 export const signUpUser = async (
