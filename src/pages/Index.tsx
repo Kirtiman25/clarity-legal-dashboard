@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import { useSecureAuth } from '@/hooks/useSecureAuth';
 import { sanitizeText } from '@/lib/validation';
+import { toast } from '@/hooks/use-toast';
 
 const Index = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -53,8 +54,13 @@ const Index = () => {
         // Switch to login mode after successful signup
         setIsLogin(true);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Auth error:', error);
+      toast({
+        title: isLogin ? "Sign In Failed" : "Sign Up Failed",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -87,6 +93,11 @@ const Index = () => {
           <p className="text-gray-600 text-sm">
             {isLogin ? 'Sign in to your account' : 'Create your account'}
           </p>
+          {!isLogin && (
+            <p className="text-xs text-orange-600 mt-2">
+              Note: You'll need to confirm your email before signing in
+            </p>
+          )}
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -170,6 +181,11 @@ const Index = () => {
                 {isLogin ? 'Sign up' : 'Sign in'}
               </button>
             </p>
+            {isLogin && (
+              <p className="text-xs text-gray-500 mt-2">
+                If you just signed up, please check your email for a confirmation link first.
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>

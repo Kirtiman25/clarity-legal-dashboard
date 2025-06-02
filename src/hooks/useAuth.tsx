@@ -16,12 +16,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       console.log('Starting signup process for:', email);
-      await signUpUser(email, password, fullName, referralCode);
+      const result = await signUpUser(email, password, fullName, referralCode);
       console.log('Signup completed successfully');
-      toast({
-        title: "Account Created!",
-        description: "Welcome to the platform. You can now sign in.",
-      });
+      
+      // Show different messages based on whether email confirmation is required
+      if (result.user && !result.session) {
+        toast({
+          title: "Account Created!",
+          description: "Please check your email and click the confirmation link to complete registration.",
+        });
+      } else {
+        toast({
+          title: "Account Created!",
+          description: "Welcome to the platform. You are now signed in.",
+        });
+      }
+      
       setLoading(false);
     } catch (error: any) {
       console.error('Signup error in useAuth:', error);

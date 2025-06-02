@@ -17,13 +17,23 @@ export const signUpUser = async (
       data: {
         full_name: fullName,
         referred_by: referralCode || null
-      }
+      },
+      emailRedirectTo: `${window.location.origin}/`
     }
   });
 
   if (error) {
     console.error('Signup error:', error);
     throw error;
+  }
+
+  // Check if email confirmation is required
+  if (data.user && !data.session) {
+    console.log('Email confirmation required for:', email);
+    toast({
+      title: "Check your email",
+      description: "Please check your email and click the confirmation link to complete registration.",
+    });
   }
 
   console.log('Signup successful for:', email);
@@ -44,7 +54,9 @@ export const signInUser = async (email: string, password: string) => {
     let errorMessage = error.message;
     
     if (error.message.includes('Invalid login credentials')) {
-      errorMessage = "Invalid email or password. Please check your credentials and try again.";
+      errorMessage = "Invalid email or password. If you just signed up, please check your email for a confirmation link first.";
+    } else if (error.message.includes('Email not confirmed')) {
+      errorMessage = "Please check your email and click the confirmation link before signing in.";
     }
     
     throw new Error(errorMessage);
