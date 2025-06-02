@@ -23,10 +23,22 @@ export function useAuthState() {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          await handleUserProfile(session.user);
-        } else {
-          setLoading(false);
+          // Create a simple profile immediately without database calls
+          const simpleProfile: UserProfile = {
+            id: session.user.id,
+            email: session.user.email!,
+            full_name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+            referral_code: Math.random().toString(36).substring(2, 8).toUpperCase(),
+            referred_by: session.user.user_metadata?.referred_by || null,
+            is_paid: false,
+            role: 'user',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+          setUserProfile(simpleProfile);
         }
+        
+        setLoading(false);
       } catch (error) {
         console.error('Error getting initial session:', error);
         if (mounted) {
@@ -52,15 +64,29 @@ export function useAuthState() {
             description: "You have been signed in successfully.",
           });
         }
-        await handleUserProfile(session.user);
+        
+        // Create simple profile immediately
+        const simpleProfile: UserProfile = {
+          id: session.user.id,
+          email: session.user.email!,
+          full_name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+          referral_code: Math.random().toString(36).substring(2, 8).toUpperCase(),
+          referred_by: session.user.user_metadata?.referred_by || null,
+          is_paid: false,
+          role: 'user',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        setUserProfile(simpleProfile);
       } else {
         setUserProfile(null);
-        setLoading(false);
         
         if (event === 'SIGNED_OUT') {
           console.log('User signed out');
         }
       }
+      
+      setLoading(false);
     });
 
     return () => {
@@ -68,81 +94,6 @@ export function useAuthState() {
       subscription.unsubscribe();
     };
   }, []);
-
-  const handleUserProfile = async (user: User) => {
-    try {
-      console.log('Handling user profile for:', user.id);
-      
-      // Quick check for existing profile
-      const { data: profile } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (profile) {
-        console.log('Profile found:', profile.email);
-        setUserProfile(profile);
-        setLoading(false);
-        return;
-      }
-
-      // Create profile if it doesn't exist
-      console.log('Creating new profile');
-      const fullName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
-      const referredBy = user.user_metadata?.referred_by || null;
-      
-      // Simple referral code
-      const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-      
-      const newProfile: UserProfile = {
-        id: user.id,
-        email: user.email!,
-        full_name: fullName,
-        referral_code: referralCode,
-        referred_by: referredBy,
-        is_paid: false,
-        role: 'user',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-
-      // Try to insert, but don't block if it fails
-      const { data: createdProfile } = await supabase
-        .from('users')
-        .insert(newProfile)
-        .select()
-        .maybeSingle();
-
-      if (createdProfile) {
-        console.log('Profile created successfully:', createdProfile.email);
-        setUserProfile(createdProfile);
-      } else {
-        console.log('Using fallback profile');
-        setUserProfile(newProfile);
-      }
-      
-      setLoading(false);
-    } catch (error) {
-      console.error('Error handling user profile:', error);
-      
-      // Always create a fallback profile to prevent blocking
-      const fallbackProfile: UserProfile = {
-        id: user.id,
-        email: user.email!,
-        full_name: user.email?.split('@')[0] || 'User',
-        referral_code: 'TEMP123',
-        referred_by: null,
-        is_paid: false,
-        role: 'user',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      setUserProfile(fallbackProfile);
-      setLoading(false);
-    }
-  };
 
   return {
     user,

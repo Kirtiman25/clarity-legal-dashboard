@@ -20,6 +20,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Account Created!",
         description: "Welcome to the platform. You can now sign in.",
       });
+      setLoading(false);
     } catch (error: any) {
       console.error('Signup error:', error);
       toast({
@@ -36,6 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       await signInUser(email, password);
+      // Loading will be set to false by the auth state change
     } catch (error: any) {
       setLoading(false);
       throw error;
