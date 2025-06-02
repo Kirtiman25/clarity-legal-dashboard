@@ -73,69 +73,61 @@ export function useAuthState() {
     try {
       console.log('Handling user profile for:', user.id);
       
-      // Try to fetch existing profile with short timeout
-      const { data: profile, error } = await supabase
+      // Quick check for existing profile
+      const { data: profile } = await supabase
         .from('users')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (profile && !error) {
+      if (profile) {
         console.log('Profile found:', profile.email);
         setUserProfile(profile);
         setLoading(false);
         return;
       }
 
-      // If no profile exists, create one quickly
+      // Create profile if it doesn't exist
       console.log('Creating new profile');
       const fullName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
       const referredBy = user.user_metadata?.referred_by || null;
       
-      // Generate simple referral code
+      // Simple referral code
       const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
       
-      const { data: newProfile, error: createError } = await supabase
-        .from('users')
-        .insert({
-          id: user.id,
-          email: user.email!,
-          full_name: fullName,
-          referral_code: referralCode,
-          referred_by: referredBy,
-          is_paid: false,
-          role: 'user'
-        })
-        .select()
-        .single();
+      const newProfile: UserProfile = {
+        id: user.id,
+        email: user.email!,
+        full_name: fullName,
+        referral_code: referralCode,
+        referred_by: referredBy,
+        is_paid: false,
+        role: 'user',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
 
-      if (newProfile && !createError) {
-        console.log('Profile created successfully:', newProfile.email);
-        setUserProfile(newProfile);
+      // Try to insert, but don't block if it fails
+      const { data: createdProfile } = await supabase
+        .from('users')
+        .insert(newProfile)
+        .select()
+        .maybeSingle();
+
+      if (createdProfile) {
+        console.log('Profile created successfully:', createdProfile.email);
+        setUserProfile(createdProfile);
       } else {
-        console.error('Failed to create profile, using fallback:', createError);
-        // Use fallback profile to prevent blocking
-        setUserProfile({
-          id: user.id,
-          email: user.email!,
-          full_name: fullName,
-          referral_code: referralCode,
-          referred_by: referredBy,
-          is_paid: false,
-          role: 'user',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        } as UserProfile);
+        console.log('Using fallback profile');
+        setUserProfile(newProfile);
       }
       
       setLoading(false);
     } catch (error) {
       console.error('Error handling user profile:', error);
-      // Always stop loading, even on error
-      setLoading(false);
       
-      // Use minimal fallback profile
-      setUserProfile({
+      // Always create a fallback profile to prevent blocking
+      const fallbackProfile: UserProfile = {
         id: user.id,
         email: user.email!,
         full_name: user.email?.split('@')[0] || 'User',
@@ -145,7 +137,10 @@ export function useAuthState() {
         role: 'user',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      } as UserProfile);
+      };
+      
+      setUserProfile(fallbackProfile);
+      setLoading(false);
     }
   };
 
