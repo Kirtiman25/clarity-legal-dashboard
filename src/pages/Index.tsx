@@ -48,9 +48,8 @@ const Index = () => {
         await signIn(formData.email, formData.password);
       } else {
         await signUp(formData.email, formData.password, formData.fullName, formData.referralCode);
-        // After successful signup, switch to login mode and clear sensitive fields
-        setIsLogin(true);
-        setFormData({ ...formData, password: '', fullName: '', referralCode: '' });
+        // Clear form after successful signup
+        setFormData({ fullName: '', email: '', password: '', referralCode: '' });
       }
     } catch (error) {
       console.error('Auth error:', error);

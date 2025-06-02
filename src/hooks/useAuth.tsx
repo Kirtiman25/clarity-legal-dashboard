@@ -5,7 +5,6 @@ import { signUpUser, signInUser, signOutUser } from '@/services/authService';
 import { toast } from '@/hooks/use-toast';
 import type { AuthContextType } from '@/types/auth';
 
-// Create the context with undefined as default
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -16,11 +15,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, fullName: string, referralCode?: string) => {
     try {
       setLoading(true);
-      const data = await signUpUser(email, password, fullName, referralCode);
-      
-      if (data.user && !data.user.email_confirmed_at) {
-        setLoading(false);
-      }
+      await signUpUser(email, password, fullName, referralCode);
     } catch (error: any) {
       console.error('Signup error:', error);
       setLoading(false);

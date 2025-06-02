@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { fetchUserProfile } from '@/services/authService';
+import { fetchUserProfile, createUserProfile } from '@/services/authService';
 import type { UserProfile } from '@/types/auth';
 
 export function useAuthState() {
@@ -24,7 +24,7 @@ export function useAuthState() {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          await handleUserProfile(session.user.id);
+          await handleUserProfile(session.user);
         } else {
           setLoading(false);
         }
@@ -52,14 +52,8 @@ export function useAuthState() {
             title: "Welcome!",
             description: "You have been signed in successfully.",
           });
-          await handleUserProfile(session.user.id);
-        } else if (event === 'TOKEN_REFRESHED') {
-          console.log('Token refreshed for user:', session.user.email);
-          // Only fetch profile if we don't have one yet
-          if (!userProfile) {
-            await handleUserProfile(session.user.id);
-          }
         }
+        await handleUserProfile(session.user);
       } else {
         setUserProfile(null);
         setLoading(false);
@@ -74,30 +68,31 @@ export function useAuthState() {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [userProfile]);
+  }, []);
 
-  const handleUserProfile = async (userId: string) => {
+  const handleUserProfile = async (user: User) => {
     try {
-      console.log('Handling user profile for:', userId);
-      const profile = await fetchUserProfile(userId);
+      console.log('Handling user profile for:', user.id);
+      
+      // Try to fetch existing profile
+      let profile = await fetchUserProfile(user.id);
+      
+      // If no profile exists, create one
+      if (!profile) {
+        console.log('No profile found, creating new profile');
+        const fullName = user.user_metadata?.full_name || 'User';
+        const referredBy = user.user_metadata?.referred_by || null;
+        
+        profile = await createUserProfile(user.id, user.email!, fullName, referredBy);
+      }
       
       if (profile) {
         setUserProfile(profile);
         console.log('Profile set successfully:', profile.email);
       } else {
-        console.log('Profile not found - may be newly created user');
-        // For new users, the trigger should create the profile
-        // Let's wait a bit and try again
-        setTimeout(async () => {
-          const retryProfile = await fetchUserProfile(userId);
-          if (retryProfile) {
-            setUserProfile(retryProfile);
-            console.log('Profile found on retry:', retryProfile.email);
-          } else {
-            console.error('Profile still not found after retry');
-          }
-        }, 2000);
+        console.error('Failed to create or fetch user profile');
       }
+      
       setLoading(false);
     } catch (error) {
       console.error('Error handling user profile:', error);

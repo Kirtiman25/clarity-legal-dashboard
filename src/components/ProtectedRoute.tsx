@@ -26,7 +26,7 @@ const ProtectedRoute = ({ children, requirePaid = false }: ProtectedRouteProps) 
         return;
       }
     }
-  }, [user, userProfile, loading, navigate, requirePaid]);
+  }, [user, userProfile, loading, navigate]);
 
   if (loading) {
     return (
@@ -39,7 +39,6 @@ const ProtectedRoute = ({ children, requirePaid = false }: ProtectedRouteProps) 
     );
   }
 
-  // Only require user and profile (removed email confirmation requirement)
   if (!user || !userProfile) {
     return null;
   }
