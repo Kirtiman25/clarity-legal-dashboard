@@ -13,7 +13,7 @@ export function useAuthState() {
   useEffect(() => {
     let mounted = true;
 
-    // Get initial session immediately
+    // Get initial session
     const getInitialSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -73,19 +73,12 @@ export function useAuthState() {
     try {
       console.log('Handling user profile for:', user.id);
       
-      // First try to fetch existing profile with a timeout
-      const profilePromise = supabase
+      // Try to fetch existing profile with short timeout
+      const { data: profile, error } = await supabase
         .from('users')
         .select('*')
         .eq('id', user.id)
         .single();
-
-      const { data: profile, error } = await Promise.race([
-        profilePromise,
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
-        )
-      ]) as any;
 
       if (profile && !error) {
         console.log('Profile found:', profile.email);
@@ -94,7 +87,7 @@ export function useAuthState() {
         return;
       }
 
-      // If no profile exists or fetch failed, create one quickly
+      // If no profile exists, create one quickly
       console.log('Creating new profile');
       const fullName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
       const referredBy = user.user_metadata?.referred_by || null;
@@ -120,8 +113,8 @@ export function useAuthState() {
         console.log('Profile created successfully:', newProfile.email);
         setUserProfile(newProfile);
       } else {
-        console.error('Failed to create profile:', createError);
-        // Continue anyway - user can still use the app
+        console.error('Failed to create profile, using fallback:', createError);
+        // Use fallback profile to prevent blocking
         setUserProfile({
           id: user.id,
           email: user.email!,
@@ -138,7 +131,10 @@ export function useAuthState() {
       setLoading(false);
     } catch (error) {
       console.error('Error handling user profile:', error);
-      // Don't block the user - continue with minimal profile
+      // Always stop loading, even on error
+      setLoading(false);
+      
+      // Use minimal fallback profile
       setUserProfile({
         id: user.id,
         email: user.email!,
@@ -150,7 +146,6 @@ export function useAuthState() {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       } as UserProfile);
-      setLoading(false);
     }
   };
 

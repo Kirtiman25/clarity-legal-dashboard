@@ -28,7 +28,7 @@ const Index = () => {
       authLoading 
     });
     
-    // Redirect if user is authenticated and has profile
+    // Only redirect if we have both user and profile and not loading
     if (!authLoading && user && userProfile) {
       console.log('Redirecting to workspace');
       navigate('/workspace');
@@ -50,14 +50,15 @@ const Index = () => {
         await signUp(formData.email, formData.password, formData.fullName, formData.referralCode);
         // Clear form after successful signup
         setFormData({ fullName: '', email: '', password: '', referralCode: '' });
+        // Switch to login mode after successful signup
+        setIsLogin(true);
       }
     } catch (error) {
       console.error('Auth error:', error);
-      // Error handling is done in the secure auth hook
     }
   };
 
-  // Show loading spinner while checking auth state
+  // Show loading while checking auth state or submitting
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">

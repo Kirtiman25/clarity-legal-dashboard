@@ -1,4 +1,3 @@
-
 import { createContext, useContext, ReactNode } from 'react';
 import { useAuthState } from './useAuthState';
 import { signUpUser, signInUser, signOutUser } from '@/services/authService';
@@ -22,12 +21,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     } catch (error: any) {
       console.error('Signup error:', error);
-      setLoading(false);
       toast({
         title: "Signup Failed",
         description: error.message,
         variant: "destructive",
       });
+      setLoading(false);
       throw error;
     }
   };
