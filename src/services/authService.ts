@@ -15,10 +15,25 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
     if (error) {
       console.error('Profile fetch error:', error);
       
-      // If profile doesn't exist, create it
+      // If profile doesn't exist, try to create it (backup in case trigger didn't work)
       if (error.code === 'PGRST116') {
-        console.log('Profile not found, creating new profile for user:', userId);
-        return await createUserProfile(userId);
+        console.log('Profile not found, will be created by trigger or manual creation');
+        // Wait a moment for trigger to potentially create the profile
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Try fetching again
+        const { data: retryData, error: retryError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', userId)
+          .single();
+          
+        if (retryError) {
+          console.log('Profile still not found after retry, this is expected for new signups');
+          return null;
+        }
+        
+        return retryData;
       }
       return null;
     }
@@ -31,51 +46,6 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
   }
 };
 
-const createUserProfile = async (userId: string): Promise<UserProfile | null> => {
-  try {
-    // Get user data from auth.users to create profile
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      console.error('No authenticated user found');
-      return null;
-    }
-
-    const profileData = {
-      id: userId,
-      email: user.email || '',
-      full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
-      referral_code: generateReferralCode(),
-      referred_by: user.user_metadata?.referred_by || null,
-      role: 'user' as const,
-      is_paid: false
-    };
-
-    console.log('Creating user profile:', profileData);
-
-    const { data, error } = await supabase
-      .from('users')
-      .insert(profileData)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating user profile:', error);
-      return null;
-    }
-
-    console.log('User profile created successfully:', data);
-    return data;
-  } catch (error) {
-    console.error('Error in createUserProfile:', error);
-    return null;
-  }
-};
-
-const generateReferralCode = (): string => {
-  return Math.random().toString(36).substring(2, 8).toUpperCase();
-};
-
 export const signUpUser = async (
   email: string, 
   password: string, 
@@ -84,7 +54,6 @@ export const signUpUser = async (
 ) => {
   console.log('Attempting signup for:', email);
   
-  // Use the current origin for redirect
   const redirectUrl = `${window.location.origin}/`;
   console.log('Using redirect URL:', redirectUrl);
   
@@ -142,21 +111,25 @@ export const signInUser = async (email: string, password: string) => {
     if (error.message.includes('Email not confirmed')) {
       errorMessage = "Please check your email and click the confirmation link before signing in.";
       
-      // Offer to resend confirmation email
       toast({
         title: "Email Not Confirmed",
-        description: errorMessage + " Would you like us to resend the confirmation email?",
+        description: errorMessage,
         variant: "destructive",
         duration: 10000,
       });
       
-      // Optionally resend confirmation
+      // Resend confirmation email
       try {
         await supabase.auth.resend({
           type: 'signup',
           email: email
         });
         console.log('Resent confirmation email to:', email);
+        toast({
+          title: "Confirmation Email Resent",
+          description: "We've sent another confirmation email. Please check your inbox.",
+          duration: 5000,
+        });
       } catch (resendError) {
         console.error('Failed to resend confirmation:', resendError);
       }

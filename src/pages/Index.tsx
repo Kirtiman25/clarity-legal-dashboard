@@ -23,16 +23,21 @@ const Index = () => {
   const { signUp, signIn, isSubmitting } = useSecureAuth();
 
   useEffect(() => {
-    console.log('Index - Auth state:', { user: user?.email, userProfile: !!userProfile, authLoading });
+    console.log('Index - Auth state:', { 
+      user: user?.email, 
+      userProfile: !!userProfile, 
+      emailConfirmed: user?.email_confirmed_at,
+      authLoading 
+    });
     
-    if (!authLoading && user && userProfile) {
+    // Only redirect if user is confirmed and has profile
+    if (!authLoading && user && user.email_confirmed_at && userProfile) {
       console.log('Redirecting to workspace');
       navigate('/workspace');
     }
   }, [user, userProfile, authLoading, navigate]);
 
   const handleInputChange = (field: string, value: string) => {
-    // Sanitize input in real-time
     const sanitizedValue = field === 'email' ? value.toLowerCase().trim() : sanitizeText(value);
     setFormData(prev => ({ ...prev, [field]: sanitizedValue }));
   };
@@ -45,6 +50,7 @@ const Index = () => {
         await signIn(formData.email, formData.password);
       } else {
         await signUp(formData.email, formData.password, formData.fullName, formData.referralCode);
+        // After successful signup, switch to login mode and clear sensitive fields
         setIsLogin(true);
         setFormData({ ...formData, password: '', fullName: '', referralCode: '' });
       }
@@ -89,6 +95,14 @@ const Index = () => {
             <Alert className="mb-4">
               <AlertDescription>
                 After creating your account, please check your email for a verification link before signing in.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {user && !user.email_confirmed_at && (
+            <Alert className="mb-4 border-orange-200 bg-orange-50">
+              <AlertDescription className="text-orange-800">
+                Please check your email and click the confirmation link to complete your registration.
               </AlertDescription>
             </Alert>
           )}

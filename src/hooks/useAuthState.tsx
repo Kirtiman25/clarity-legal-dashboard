@@ -24,7 +24,13 @@ export function useAuthState() {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          await handleUserProfile(session.user.id);
+          // Only fetch profile if user is confirmed
+          if (session.user.email_confirmed_at) {
+            await handleUserProfile(session.user.id);
+          } else {
+            console.log('User email not confirmed, skipping profile fetch');
+            setLoading(false);
+          }
         } else {
           setLoading(false);
         }
@@ -48,15 +54,27 @@ export function useAuthState() {
       
       if (session?.user) {
         if (event === 'SIGNED_IN') {
-          toast({
-            title: "Welcome!",
-            description: "You have been signed in successfully.",
-          });
+          if (session.user.email_confirmed_at) {
+            toast({
+              title: "Welcome!",
+              description: "You have been signed in successfully.",
+            });
+            await handleUserProfile(session.user.id);
+          } else {
+            toast({
+              title: "Email Confirmation Required",
+              description: "Please check your email and click the confirmation link.",
+              variant: "destructive",
+            });
+            setLoading(false);
+          }
         } else if (event === 'TOKEN_REFRESHED') {
           console.log('Token refreshed for user:', session.user.email);
+          // Only fetch profile if we don't have one yet
+          if (!userProfile && session.user.email_confirmed_at) {
+            await handleUserProfile(session.user.id);
+          }
         }
-        
-        await handleUserProfile(session.user.id);
       } else {
         setUserProfile(null);
         setLoading(false);
@@ -71,7 +89,7 @@ export function useAuthState() {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [userProfile]);
 
   const handleUserProfile = async (userId: string) => {
     try {
@@ -82,12 +100,18 @@ export function useAuthState() {
         setUserProfile(profile);
         console.log('Profile set successfully:', profile.email);
       } else {
-        console.error('Failed to fetch or create user profile');
-        toast({
-          title: "Profile Error",
-          description: "There was an issue loading your profile. Please try refreshing the page.",
-          variant: "destructive",
-        });
+        console.log('Profile not found - may be newly created user');
+        // For new users, the trigger should create the profile
+        // Let's wait a bit and try again
+        setTimeout(async () => {
+          const retryProfile = await fetchUserProfile(userId);
+          if (retryProfile) {
+            setUserProfile(retryProfile);
+            console.log('Profile found on retry:', retryProfile.email);
+          } else {
+            console.error('Profile still not found after retry');
+          }
+        }, 2000);
       }
       setLoading(false);
     } catch (error) {
