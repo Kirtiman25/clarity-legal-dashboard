@@ -17,17 +17,17 @@ export function useAuthState() {
         .from('users')
         .select('*')
         .eq('id', userId)
-        .maybeSingle(); // Use maybeSingle instead of single to avoid errors when no data
+        .single();
 
       if (error) {
         console.error('Error fetching user profile:', error);
         return null;
       }
 
-      console.log('Fetched user profile:', data);
+      console.log('Successfully fetched user profile:', data);
       return data;
     } catch (error) {
-      console.error('Error fetching user profile:', error);
+      console.error('Exception in fetchUserProfile:', error);
       return null;
     }
   };
@@ -35,17 +35,24 @@ export function useAuthState() {
   const createUserProfile = async (user: User): Promise<UserProfile | null> => {
     try {
       console.log('Creating user profile for:', user.email);
+      
+      // Generate a unique referral code
+      const generateReferralCode = () => {
+        return Math.random().toString(36).substring(2, 8).toUpperCase();
+      };
+
       const profileData = {
         id: user.id,
         email: user.email!,
         full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
-        referral_code: Math.random().toString(36).substring(2, 8).toUpperCase(),
+        referral_code: generateReferralCode(),
         referred_by: user.user_metadata?.referred_by || null,
         is_paid: false,
         role: 'user' as const,
       };
 
       console.log('Inserting profile data:', profileData);
+      
       const { data, error } = await supabase
         .from('users')
         .insert([profileData])
@@ -53,21 +60,14 @@ export function useAuthState() {
         .single();
 
       if (error) {
-        console.error('Error creating user profile in DB:', error);
-        // Still return the profile data even if DB insert fails
-        const fallbackProfile: UserProfile = {
-          ...profileData,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        console.log('Using fallback profile:', fallbackProfile);
-        return fallbackProfile;
+        console.error('Error creating user profile:', error);
+        return null;
       }
 
       console.log('Successfully created user profile:', data);
       return data;
     } catch (error) {
-      console.error('Error in createUserProfile:', error);
+      console.error('Exception in createUserProfile:', error);
       return null;
     }
   };
@@ -75,46 +75,47 @@ export function useAuthState() {
   useEffect(() => {
     let mounted = true;
 
-    // Get initial session
-    const getInitialSession = async () => {
+    const initializeAuth = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (!mounted) return;
+        console.log('Initializing auth state...');
         
-        console.log('Initial session check:', session?.user?.email || 'No session');
+        // Get initial session
+        const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('Error getting initial session:', error);
-          setLoading(false);
+          if (mounted) setLoading(false);
           return;
         }
+
+        console.log('Initial session:', session?.user?.email || 'No session');
         
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          console.log('User found in initial session, setting up profile...');
-          // Try to fetch existing profile from database
-          const profile = await fetchUserProfile(session.user.id);
-          if (profile) {
-            setUserProfile(profile);
-          } else {
-            // Create new profile if doesn't exist
-            console.log('No existing profile found, creating new one...');
-            const newProfile = await createUserProfile(session.user);
-            setUserProfile(newProfile);
-          }
-        }
-        
-        setLoading(false);
-      } catch (error) {
-        console.error('Error in getInitialSession:', error);
         if (mounted) {
+          setUser(session?.user ?? null);
+          
+          if (session?.user) {
+            // Try to fetch existing profile
+            let profile = await fetchUserProfile(session.user.id);
+            
+            // If no profile exists, create one
+            if (!profile) {
+              console.log('No profile found, creating new one...');
+              profile = await createUserProfile(session.user);
+            }
+            
+            setUserProfile(profile);
+          }
+          
           setLoading(false);
         }
+      } catch (error) {
+        console.error('Error in initializeAuth:', error);
+        if (mounted) setLoading(false);
       }
     };
 
-    getInitialSession();
+    // Initialize auth state
+    initializeAuth();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -133,17 +134,15 @@ export function useAuthState() {
           });
         }
         
-        console.log('Setting up user profile after auth change...');
-        // Try to fetch existing profile from database
-        const profile = await fetchUserProfile(session.user.id);
-        if (profile) {
-          setUserProfile(profile);
-        } else {
-          // Create new profile if doesn't exist
-          console.log('Creating new profile after auth change...');
-          const newProfile = await createUserProfile(session.user);
-          setUserProfile(newProfile);
+        // Handle user profile for signed in user
+        let profile = await fetchUserProfile(session.user.id);
+        
+        if (!profile) {
+          console.log('Creating profile after auth change...');
+          profile = await createUserProfile(session.user);
         }
+        
+        setUserProfile(profile);
       } else {
         setUserProfile(null);
         
