@@ -74,10 +74,12 @@ export function useAuthState() {
           return await fetchUserProfile(user.id);
         }
         
+        // Show user-friendly error but don't block the auth flow completely
         toast({
-          title: "Profile Creation Error",
-          description: "There was an issue creating your profile. Please contact support if this persists.",
+          title: "Profile Setup Issue",
+          description: "There was an issue setting up your profile. Some features may be limited.",
           variant: "destructive",
+          duration: 8000,
         });
         return null;
       }
@@ -92,20 +94,30 @@ export function useAuthState() {
 
   useEffect(() => {
     let mounted = true;
+    let retryCount = 0;
+    const maxRetries = 3;
 
     const initializeAuth = async () => {
       try {
         console.log('Initializing auth state...');
         
-        // Get initial session
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Error getting initial session:', error);
-          if (mounted) setLoading(false);
-          return;
-        }
+        // Get initial session with retry logic
+        const getSessionWithRetry = async (): Promise<any> => {
+          for (let i = 0; i < maxRetries; i++) {
+            try {
+              const { data: { session }, error } = await supabase.auth.getSession();
+              if (error) throw error;
+              return session;
+            } catch (error) {
+              console.warn(`Session fetch attempt ${i + 1} failed:`, error);
+              if (i === maxRetries - 1) throw error;
+              await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // Exponential backoff
+            }
+          }
+        };
 
+        const session = await getSessionWithRetry();
+        
         console.log('Initial session:', session?.user?.email || 'No session');
         
         if (mounted) {
@@ -131,7 +143,16 @@ export function useAuthState() {
         }
       } catch (error) {
         console.error('Error in initializeAuth:', error);
-        if (mounted) setLoading(false);
+        if (mounted) {
+          setLoading(false);
+          // Show error to user if session initialization fails completely
+          toast({
+            title: "Connection Issue",
+            description: "Having trouble connecting. Please refresh the page.",
+            variant: "destructive",
+            duration: 8000,
+          });
+        }
       }
     };
 
@@ -160,8 +181,8 @@ export function useAuthState() {
         // Handle user profile for signed in user
         let profile = await fetchUserProfile(session.user.id);
         
-        if (!profile) {
-          console.log('Creating profile after auth change...');
+        if (!profile && event === 'SIGNED_IN') {
+          console.log('Creating profile after sign in...');
           profile = await createUserProfile(session.user);
         }
         

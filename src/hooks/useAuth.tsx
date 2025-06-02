@@ -16,30 +16,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       console.log('Starting signup process for:', email);
+      
       const result = await signUpUser(email, password, fullName, referralCode);
       console.log('Signup completed successfully');
       
-      // Show different messages based on whether email confirmation is required
-      if (result.user && !result.session) {
-        toast({
-          title: "Account Created!",
-          description: "Please check your email and click the confirmation link to complete registration.",
-        });
-      } else {
-        toast({
-          title: "Account Created!",
-          description: "Welcome to the platform. You are now signed in.",
-        });
-      }
+      // Don't show additional toast here as authService already handles it
+      return result;
       
-      setLoading(false);
     } catch (error: any) {
       console.error('Signup error in useAuth:', error);
+      
+      // Show user-friendly error message
+      const errorMessage = error.message || 'Failed to create account. Please try again.';
       toast({
-        title: "Signup Failed",
-        description: error.message,
+        title: "Sign Up Failed",
+        description: errorMessage,
         variant: "destructive",
+        duration: 8000,
       });
+      
       setLoading(false);
       throw error;
     }
@@ -49,12 +44,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       console.log('Starting signin process for:', email);
+      
       await signInUser(email, password);
       console.log('Signin completed successfully');
       // Loading will be set to false by the auth state change
+      
     } catch (error: any) {
       console.error('Signin error in useAuth:', error);
       setLoading(false);
+      
+      // Show user-friendly error message
+      const errorMessage = error.message || 'Failed to sign in. Please try again.';
+      toast({
+        title: "Sign In Failed", 
+        description: errorMessage,
+        variant: "destructive",
+        duration: 8000,
+      });
+      
       throw error;
     }
   };
@@ -67,8 +74,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error: any) {
       console.error('Signout error in useAuth:', error);
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Sign Out Error",
+        description: "There was an issue signing out. Please try again.",
         variant: "destructive",
       });
     }
