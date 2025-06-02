@@ -1,4 +1,3 @@
-
 import { createContext, useContext, ReactNode } from 'react';
 import { useAuthState } from './useAuthState';
 import { signUpUser, signInUser, signOutUser } from '@/services/authService';
