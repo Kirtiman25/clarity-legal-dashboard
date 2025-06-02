@@ -27,12 +27,20 @@ export const signUpUser = async (
     throw error;
   }
 
+  console.log('Signup response:', { user: !!data.user, session: !!data.session });
+
   // Check if email confirmation is required
   if (data.user && !data.session) {
     console.log('Email confirmation required for:', email);
     toast({
       title: "Check your email",
       description: "Please check your email and click the confirmation link to complete registration.",
+    });
+  } else if (data.user && data.session) {
+    console.log('User signed up and signed in immediately:', email);
+    toast({
+      title: "Account Created!",
+      description: "Welcome! Your account has been created successfully.",
     });
   }
 
@@ -57,6 +65,8 @@ export const signInUser = async (email: string, password: string) => {
       errorMessage = "Invalid email or password. If you just signed up, please check your email for a confirmation link first.";
     } else if (error.message.includes('Email not confirmed')) {
       errorMessage = "Please check your email and click the confirmation link before signing in.";
+    } else if (error.message.includes('signup_disabled')) {
+      errorMessage = "Account signup is currently disabled. Please contact support.";
     }
     
     throw new Error(errorMessage);

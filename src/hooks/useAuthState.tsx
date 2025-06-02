@@ -20,6 +20,10 @@ export function useAuthState() {
         .single();
 
       if (error) {
+        if (error.code === 'PGRST116') {
+          console.log('No user profile found, this is normal for new users');
+          return null;
+        }
         console.error('Error fetching user profile:', error);
         return null;
       }
@@ -35,6 +39,7 @@ export function useAuthState() {
   const createUserProfile = async (user: User): Promise<UserProfile | null> => {
     try {
       console.log('Creating user profile for:', user.email);
+      console.log('User metadata:', user.user_metadata);
       
       // Generate a unique referral code
       const generateReferralCode = () => {
@@ -51,7 +56,7 @@ export function useAuthState() {
         role: 'user' as const,
       };
 
-      console.log('Inserting profile data:', profileData);
+      console.log('Attempting to insert profile data:', profileData);
       
       const { data, error } = await supabase
         .from('users')
@@ -61,6 +66,19 @@ export function useAuthState() {
 
       if (error) {
         console.error('Error creating user profile:', error);
+        console.error('Error details:', error.details, error.hint, error.message);
+        
+        // If it's a duplicate key error, try to fetch the existing profile
+        if (error.code === '23505') {
+          console.log('Profile already exists, fetching existing profile...');
+          return await fetchUserProfile(user.id);
+        }
+        
+        toast({
+          title: "Profile Creation Error",
+          description: "There was an issue creating your profile. Please contact support if this persists.",
+          variant: "destructive",
+        });
         return null;
       }
 
@@ -94,13 +112,16 @@ export function useAuthState() {
           setUser(session?.user ?? null);
           
           if (session?.user) {
-            // Try to fetch existing profile
+            console.log('User found in session, fetching/creating profile...');
+            // Try to fetch existing profile first
             let profile = await fetchUserProfile(session.user.id);
             
             // If no profile exists, create one
             if (!profile) {
               console.log('No profile found, creating new one...');
               profile = await createUserProfile(session.user);
+            } else {
+              console.log('Found existing profile:', profile);
             }
             
             setUserProfile(profile);
@@ -126,6 +147,8 @@ export function useAuthState() {
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        console.log('Auth state change: User signed in, handling profile...');
+        
         if (event === 'SIGNED_IN') {
           console.log('User signed in, showing welcome toast');
           toast({
@@ -144,6 +167,7 @@ export function useAuthState() {
         
         setUserProfile(profile);
       } else {
+        console.log('No user in session, clearing profile');
         setUserProfile(null);
         
         if (event === 'SIGNED_OUT') {
