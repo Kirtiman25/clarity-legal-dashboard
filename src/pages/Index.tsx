@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/useAuth';
 import { useSecureAuth } from '@/hooks/useSecureAuth';
 import { sanitizeText } from '@/lib/validation';
@@ -26,12 +25,11 @@ const Index = () => {
     console.log('Index - Auth state:', { 
       user: user?.email, 
       userProfile: !!userProfile, 
-      emailConfirmed: user?.email_confirmed_at,
       authLoading 
     });
     
-    // Only redirect if user is confirmed and has profile
-    if (!authLoading && user && user.email_confirmed_at && userProfile) {
+    // Redirect if user is authenticated and has profile
+    if (!authLoading && user && userProfile) {
       console.log('Redirecting to workspace');
       navigate('/workspace');
     }
@@ -91,22 +89,6 @@ const Index = () => {
           </p>
         </CardHeader>
         <CardContent>
-          {!isLogin && (
-            <Alert className="mb-4">
-              <AlertDescription>
-                After creating your account, please check your email for a verification link before signing in.
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {user && !user.email_confirmed_at && (
-            <Alert className="mb-4 border-orange-200 bg-orange-50">
-              <AlertDescription className="text-orange-800">
-                Please check your email and click the confirmation link to complete your registration.
-              </AlertDescription>
-            </Alert>
-          )}
-          
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div className="space-y-2">

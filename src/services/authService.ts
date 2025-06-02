@@ -54,14 +54,11 @@ export const signUpUser = async (
 ) => {
   console.log('Attempting signup for:', email);
   
-  const redirectUrl = `${window.location.origin}/`;
-  console.log('Using redirect URL:', redirectUrl);
-  
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      emailRedirectTo: redirectUrl,
+      emailRedirectTo: undefined, // Remove email redirect
       data: {
         full_name: fullName,
         referred_by: referralCode || null
@@ -76,16 +73,9 @@ export const signUpUser = async (
 
   console.log('Signup response:', data);
 
-  // Check if user needs to confirm email
-  if (data.user && !data.user.email_confirmed_at) {
-    console.log('Email confirmation required');
-    toast({
-      title: "Check Your Email",
-      description: "We've sent you a confirmation link. Please check your email and click the link to complete your registration.",
-      duration: 10000,
-    });
-  } else if (data.user && data.user.email_confirmed_at) {
-    console.log('User signed up and confirmed automatically');
+  // Since we're removing email verification, user should be signed in immediately
+  if (data.user) {
+    console.log('User signed up successfully');
     toast({
       title: "Welcome!",
       description: "Your account has been created successfully.",
@@ -108,33 +98,7 @@ export const signInUser = async (email: string, password: string) => {
     
     let errorMessage = error.message;
     
-    if (error.message.includes('Email not confirmed')) {
-      errorMessage = "Please check your email and click the confirmation link before signing in.";
-      
-      toast({
-        title: "Email Not Confirmed",
-        description: errorMessage,
-        variant: "destructive",
-        duration: 10000,
-      });
-      
-      // Resend confirmation email
-      try {
-        await supabase.auth.resend({
-          type: 'signup',
-          email: email
-        });
-        console.log('Resent confirmation email to:', email);
-        toast({
-          title: "Confirmation Email Resent",
-          description: "We've sent another confirmation email. Please check your inbox.",
-          duration: 5000,
-        });
-      } catch (resendError) {
-        console.error('Failed to resend confirmation:', resendError);
-      }
-      
-    } else if (error.message.includes('Invalid login credentials')) {
+    if (error.message.includes('Invalid login credentials')) {
       errorMessage = "Invalid email or password. Please check your credentials and try again.";
     }
     

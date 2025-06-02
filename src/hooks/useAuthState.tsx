@@ -24,13 +24,7 @@ export function useAuthState() {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Only fetch profile if user is confirmed
-          if (session.user.email_confirmed_at) {
-            await handleUserProfile(session.user.id);
-          } else {
-            console.log('User email not confirmed, skipping profile fetch');
-            setLoading(false);
-          }
+          await handleUserProfile(session.user.id);
         } else {
           setLoading(false);
         }
@@ -54,24 +48,15 @@ export function useAuthState() {
       
       if (session?.user) {
         if (event === 'SIGNED_IN') {
-          if (session.user.email_confirmed_at) {
-            toast({
-              title: "Welcome!",
-              description: "You have been signed in successfully.",
-            });
-            await handleUserProfile(session.user.id);
-          } else {
-            toast({
-              title: "Email Confirmation Required",
-              description: "Please check your email and click the confirmation link.",
-              variant: "destructive",
-            });
-            setLoading(false);
-          }
+          toast({
+            title: "Welcome!",
+            description: "You have been signed in successfully.",
+          });
+          await handleUserProfile(session.user.id);
         } else if (event === 'TOKEN_REFRESHED') {
           console.log('Token refreshed for user:', session.user.email);
           // Only fetch profile if we don't have one yet
-          if (!userProfile && session.user.email_confirmed_at) {
+          if (!userProfile) {
             await handleUserProfile(session.user.id);
           }
         }
