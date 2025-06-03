@@ -19,19 +19,34 @@ export function useAuthState() {
   const handleUserProfile = async (user: User) => {
     if (user.email_confirmed_at) {
       console.log('Email confirmed, fetching/creating profile...');
-      let profile = await fetchUserProfile(user.id);
       
-      if (!profile) {
-        console.log('No profile found, creating new one...');
-        profile = await createUserProfile(user);
-      } else {
-        console.log('Found existing profile:', profile);
+      try {
+        let profile = await fetchUserProfile(user.id);
+        
+        if (!profile) {
+          console.log('No profile found, creating new one...');
+          profile = await createUserProfile(user);
+        } else {
+          console.log('Found existing profile:', profile);
+        }
+        
+        if (profile) {
+          setUserProfile(profile);
+          console.log('Profile set successfully, clearing loading state');
+        } else {
+          console.error('Failed to create or fetch profile, but continuing...');
+          // Don't block the user from proceeding even if profile creation fails
+        }
+      } catch (error) {
+        console.error('Error in handleUserProfile:', error);
+        // Don't block the user, just log the error
+      } finally {
+        setLoading(false);
       }
-      
-      setUserProfile(profile);
     } else {
       console.log('Email not confirmed yet, not creating profile');
       setUserProfile(null);
+      setLoading(false);
     }
   };
 
@@ -52,9 +67,9 @@ export function useAuthState() {
           if (session?.user) {
             console.log('User found in session, checking email confirmation status...');
             await handleUserProfile(session.user);
+          } else {
+            setLoading(false);
           }
-          
-          setLoading(false);
         }
       } catch (error) {
         console.error('Error in initializeAuth:', error);
@@ -89,19 +104,19 @@ export function useAuthState() {
           
           await handleUserProfile(session.user);
         } else {
-          console.log('Email not confirmed, clearing profile');
+          console.log('Email not confirmed, clearing profile and loading');
           setUserProfile(null);
+          setLoading(false);
         }
       } else {
-        console.log('No user in session, clearing profile');
+        console.log('No user in session, clearing profile and loading');
         setUserProfile(null);
+        setLoading(false);
         
         if (event === 'SIGNED_OUT') {
           console.log('User signed out');
         }
       }
-      
-      setLoading(false);
     });
 
     return () => {

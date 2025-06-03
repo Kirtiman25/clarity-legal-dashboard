@@ -66,24 +66,48 @@ export const useUserProfileOperations = () => {
         // If it's a duplicate key error, try to fetch the existing profile
         if (error.code === '23505') {
           console.log('Profile already exists, fetching existing profile...');
-          return await fetchUserProfile(user.id);
+          const existingProfile = await fetchUserProfile(user.id);
+          if (existingProfile) {
+            return existingProfile;
+          }
         }
         
-        // Show user-friendly error but don't block the auth flow completely
-        toast({
-          title: "Profile Setup Issue",
-          description: "There was an issue setting up your profile. Some features may be limited.",
-          variant: "destructive",
-          duration: 8000,
-        });
-        return null;
+        // Create a minimal profile to prevent loading loops
+        console.log('Creating minimal profile to prevent loading issues...');
+        const minimalProfile: UserProfile = {
+          id: user.id,
+          email: user.email!,
+          full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+          referral_code: generateReferralCode(),
+          referred_by: user.user_metadata?.referred_by || null,
+          is_paid: false,
+          role: 'user',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        
+        return minimalProfile;
       }
 
       console.log('Successfully created user profile:', data);
       return data;
     } catch (error) {
       console.error('Exception in createUserProfile:', error);
-      return null;
+      
+      // Return minimal profile to prevent loading loops
+      const minimalProfile: UserProfile = {
+        id: user.id,
+        email: user.email!,
+        full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+        referral_code: Math.random().toString(36).substring(2, 8).toUpperCase(),
+        referred_by: user.user_metadata?.referred_by || null,
+        is_paid: false,
+        role: 'user',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      
+      return minimalProfile;
     }
   };
 
