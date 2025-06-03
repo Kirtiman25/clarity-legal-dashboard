@@ -1,9 +1,14 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import type { UserProfile } from '@/types/auth';
 import type { User } from '@supabase/supabase-js';
 
 export const useUserProfileOperations = () => {
+  const isAdminEmail = (email: string) => {
+    return email === 'clarcatalyst123@gmail.com';
+  };
+
   const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
     try {
       console.log('Fetching user profile for:', userId);
@@ -41,7 +46,7 @@ export const useUserProfileOperations = () => {
       };
 
       // Check if this is the admin email and set role accordingly
-      const isAdminEmail = user.email === 'clarcatalyst123@gmail.com';
+      const isAdmin = isAdminEmail(user.email || '');
       
       const profileData = {
         id: user.id,
@@ -49,8 +54,8 @@ export const useUserProfileOperations = () => {
         full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
         referral_code: generateReferralCode(),
         referred_by: user.user_metadata?.referred_by || null,
-        is_paid: isAdminEmail ? true : false,
-        role: isAdminEmail ? 'admin' as const : 'user' as const,
+        is_paid: isAdmin ? true : false,
+        role: isAdmin ? 'admin' as const : 'user' as const,
       };
 
       console.log('Attempting to insert profile data:', profileData);
@@ -76,7 +81,7 @@ export const useUserProfileOperations = () => {
       console.log('Successfully created user profile:', data);
       
       // Show special message for admin user
-      if (isAdminEmail) {
+      if (isAdmin) {
         toast({
           title: "Admin Account Created!",
           description: "Welcome! You now have administrator privileges.",
@@ -93,6 +98,7 @@ export const useUserProfileOperations = () => {
 
   return {
     fetchUserProfile,
-    createUserProfile
+    createUserProfile,
+    isAdminEmail
   };
 };

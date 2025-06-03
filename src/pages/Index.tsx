@@ -8,22 +8,25 @@ import AuthForm from '@/components/auth/AuthForm';
 
 const Index = () => {
   const navigate = useNavigate();
-  const { user, userProfile, loading: authLoading } = useAuth();
+  const { user, userProfile, loading: authLoading, isAdmin } = useAuth();
 
   useEffect(() => {
     console.log('Index - Auth state:', { 
       user: user?.email, 
       userProfile: !!userProfile, 
       authLoading,
-      emailConfirmed: user?.email_confirmed_at ? 'Yes' : 'No'
+      emailConfirmed: user?.email_confirmed_at ? 'Yes' : 'No',
+      isAdmin
     });
     
-    // Only redirect if we have user with confirmed email and profile
-    if (!authLoading && user && userProfile && user.email_confirmed_at) {
+    // Redirect to workspace if user has profile and either:
+    // 1. Email is confirmed, OR
+    // 2. User is admin (admin can access without email confirmation)
+    if (!authLoading && user && userProfile && (user.email_confirmed_at || isAdmin)) {
       console.log('Redirecting to workspace');
       navigate('/workspace');
     }
-  }, [user, userProfile, authLoading, navigate]);
+  }, [user, userProfile, authLoading, isAdmin, navigate]);
 
   const handleBackToSignIn = () => {
     // This is handled by the AuthForm component's state management
@@ -39,8 +42,8 @@ const Index = () => {
     return <LoadingScreen />;
   }
 
-  // If user exists but email is not confirmed, show email confirmation screen
-  if (user && !user.email_confirmed_at && !authLoading) {
+  // If user exists but email is not confirmed AND user is not admin, show email confirmation screen
+  if (user && !user.email_confirmed_at && !isAdmin && !authLoading) {
     return (
       <EmailConfirmationScreen 
         userEmail={user.email || ''} 

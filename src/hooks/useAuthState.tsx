@@ -12,33 +12,40 @@ export function useAuthState() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const { fetchUserProfile, createUserProfile } = useUserProfileOperations();
+  const { fetchUserProfile, createUserProfile, isAdminEmail } = useUserProfileOperations();
   const { getSessionWithRetry, handleConnectionError } = useSessionOperations();
   const { showWelcomeToast } = useAuthNotifications();
 
   const createMinimalProfile = (user: User): UserProfile => {
+    const isAdmin = isAdminEmail(user.email || '');
     return {
       id: user.id,
       email: user.email!,
       full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
       referral_code: Math.random().toString(36).substring(2, 8).toUpperCase(),
       referred_by: user.user_metadata?.referred_by || null,
-      is_paid: false,
-      role: 'user',
+      is_paid: isAdmin ? true : false,
+      role: isAdmin ? 'admin' : 'user',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
   };
 
   const handleUserProfile = async (user: User) => {
-    if (!user.email_confirmed_at) {
-      console.log('Email not confirmed yet');
+    // For admin email, skip email confirmation requirement
+    if (!user.email_confirmed_at && !isAdminEmail(user.email || '')) {
+      console.log('Email not confirmed yet for non-admin user');
       setUserProfile(null);
       setLoading(false);
       return;
     }
 
-    console.log('Email confirmed, handling profile...');
+    // For admin emails, proceed even without email confirmation
+    if (isAdminEmail(user.email || '')) {
+      console.log('Admin email detected, proceeding without email confirmation check');
+    } else {
+      console.log('Email confirmed, handling profile...');
+    }
     
     try {
       // Try to fetch existing profile first with a short timeout
@@ -139,13 +146,14 @@ export function useAuthState() {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        if (session.user.email_confirmed_at) {
+        // For admin emails, skip email confirmation check, for others require it
+        if (isAdminEmail(session.user.email || '') || session.user.email_confirmed_at) {
           if (event === 'SIGNED_IN') {
             showWelcomeToast();
           }
           await handleUserProfile(session.user);
         } else {
-          console.log('Email not confirmed, clearing profile and loading');
+          console.log('Email not confirmed for non-admin user, clearing profile and loading');
           setUserProfile(null);
           setLoading(false);
         }
