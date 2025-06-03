@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,11 +30,12 @@ const Index = () => {
     console.log('Index - Auth state:', { 
       user: user?.email, 
       userProfile: !!userProfile, 
-      authLoading 
+      authLoading,
+      emailConfirmed: user?.email_confirmed_at ? 'Yes' : 'No'
     });
     
     // Only redirect if we have user with confirmed email and profile
-    if (!authLoading && user && userProfile) {
+    if (!authLoading && user && userProfile && user.email_confirmed_at) {
       console.log('Redirecting to workspace');
       navigate('/workspace');
     }
@@ -88,13 +88,8 @@ const Index = () => {
         await signUp(formData.email, formData.password, formData.fullName, formData.referralCode);
         // Clear form after successful signup
         setFormData({ fullName: '', email: '', password: '', referralCode: '' });
-        // Switch to login mode after successful signup
-        setIsLogin(true);
-        toast({
-          title: "Account Created!",
-          description: "Please check your email for confirmation, then sign in.",
-          duration: 8000,
-        });
+        // Don't switch to login mode immediately, let the email confirmation screen show
+        console.log('Signup completed, user should see email confirmation screen');
       }
     } catch (error: any) {
       console.error('Auth error:', error);
@@ -114,8 +109,8 @@ const Index = () => {
     );
   }
 
-  // If user exists but no profile, show message about email confirmation
-  if (user && !userProfile && !authLoading) {
+  // If user exists but email is not confirmed, show email confirmation screen
+  if (user && !user.email_confirmed_at && !authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
         <Card className="w-full max-w-md shadow-xl">
@@ -136,7 +131,7 @@ const Index = () => {
             <Alert className="mb-4 border-orange-200 bg-orange-50">
               <AlertCircle className="h-4 w-4 text-orange-600" />
               <AlertDescription className="text-orange-800 text-sm">
-                Please check your email and click the confirmation link to complete your registration.
+                Please check your email ({user.email}) and click the confirmation link to complete your registration.
                 Once confirmed, you can sign in to access your account.
               </AlertDescription>
             </Alert>

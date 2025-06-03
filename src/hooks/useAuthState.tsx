@@ -124,19 +124,25 @@ export function useAuthState() {
           setUser(session?.user ?? null);
           
           if (session?.user) {
-            console.log('User found in session, fetching/creating profile...');
-            // Try to fetch existing profile first
-            let profile = await fetchUserProfile(session.user.id);
-            
-            // If no profile exists, create one
-            if (!profile) {
-              console.log('No profile found, creating new one...');
-              profile = await createUserProfile(session.user);
+            console.log('User found in session, checking email confirmation status...');
+            // Only try to fetch/create profile if email is confirmed
+            if (session.user.email_confirmed_at) {
+              console.log('Email confirmed, fetching/creating profile...');
+              let profile = await fetchUserProfile(session.user.id);
+              
+              // If no profile exists, create one
+              if (!profile) {
+                console.log('No profile found, creating new one...');
+                profile = await createUserProfile(session.user);
+              } else {
+                console.log('Found existing profile:', profile);
+              }
+              
+              setUserProfile(profile);
             } else {
-              console.log('Found existing profile:', profile);
+              console.log('Email not confirmed yet, not creating profile');
+              setUserProfile(null);
             }
-            
-            setUserProfile(profile);
           }
           
           setLoading(false);
@@ -168,25 +174,33 @@ export function useAuthState() {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        console.log('Auth state change: User signed in, handling profile...');
+        console.log('Auth state change: User signed in, checking email confirmation...');
         
-        if (event === 'SIGNED_IN') {
-          console.log('User signed in, showing welcome toast');
-          toast({
-            title: "Welcome!",
-            description: "You have been signed in successfully.",
-          });
+        // Only create/fetch profile if email is confirmed
+        if (session.user.email_confirmed_at) {
+          console.log('Email confirmed, handling profile...');
+          
+          if (event === 'SIGNED_IN') {
+            console.log('User signed in with confirmed email, showing welcome toast');
+            toast({
+              title: "Welcome!",
+              description: "You have been signed in successfully.",
+            });
+          }
+          
+          // Handle user profile for confirmed user
+          let profile = await fetchUserProfile(session.user.id);
+          
+          if (!profile) {
+            console.log('Creating profile for confirmed user...');
+            profile = await createUserProfile(session.user);
+          }
+          
+          setUserProfile(profile);
+        } else {
+          console.log('Email not confirmed, clearing profile');
+          setUserProfile(null);
         }
-        
-        // Handle user profile for signed in user
-        let profile = await fetchUserProfile(session.user.id);
-        
-        if (!profile && event === 'SIGNED_IN') {
-          console.log('Creating profile after sign in...');
-          profile = await createUserProfile(session.user);
-        }
-        
-        setUserProfile(profile);
       } else {
         console.log('No user in session, clearing profile');
         setUserProfile(null);
