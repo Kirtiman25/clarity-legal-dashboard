@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import type { UserProfile } from '@/types/auth';
@@ -42,7 +41,7 @@ export const useUserProfileOperations = () => {
       };
 
       // Check if this is the admin email and set role accordingly
-      const isAdminEmail = user.email === 'clearctalyst123@gmail.com';
+      const isAdminEmail = user.email === 'clarcatalyst123@gmail.com';
       
       const profileData = {
         id: user.id,
