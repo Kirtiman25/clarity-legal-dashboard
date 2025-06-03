@@ -31,72 +31,77 @@ export function useAuthState() {
   };
 
   const handleUserProfile = async (user: User) => {
-    if (user.email_confirmed_at) {
-      console.log('Email confirmed, handling profile...');
-      
-      try {
-        // Set a shorter timeout for the entire profile operation
-        const profileTimeout = setTimeout(() => {
-          console.warn('Profile operation timeout, using minimal profile');
-          const minimalProfile = createMinimalProfile(user);
-          setUserProfile(minimalProfile);
-          setLoading(false);
-        }, 8000); // Reduced timeout to 8 seconds
-
-        // Try to fetch existing profile first
-        let profile = await fetchUserProfile(user.id);
-        
-        // If no profile exists, try to create one
-        if (!profile) {
-          console.log('No profile found, creating new one...');
-          profile = await createUserProfile(user);
-        }
-        
-        // Clear the timeout since we completed
-        clearTimeout(profileTimeout);
-        
-        // If we still don't have a profile, create a minimal one
-        if (!profile) {
-          console.log('Creating minimal profile as fallback...');
-          profile = createMinimalProfile(user);
-        }
-        
-        setUserProfile(profile);
-        console.log('Profile handling completed successfully');
-        
-      } catch (error) {
-        console.error('Error in handleUserProfile:', error);
-        // Create minimal profile as ultimate fallback
-        const minimalProfile = createMinimalProfile(user);
-        setUserProfile(minimalProfile);
-      } finally {
-        setLoading(false);
-      }
-    } else {
+    if (!user.email_confirmed_at) {
       console.log('Email not confirmed yet');
       setUserProfile(null);
+      setLoading(false);
+      return;
+    }
+
+    console.log('Email confirmed, handling profile...');
+    
+    try {
+      // Try to fetch existing profile first with a short timeout
+      const profilePromise = fetchUserProfile(user.id);
+      const timeoutPromise = new Promise<UserProfile | null>((resolve) => {
+        setTimeout(() => {
+          console.log('Profile fetch timeout, using minimal profile');
+          resolve(null);
+        }, 5000); // 5 second timeout for profile fetch
+      });
+
+      let profile = await Promise.race([profilePromise, timeoutPromise]);
+      
+      // If no profile exists, try to create one quickly
+      if (!profile) {
+        console.log('No profile found, attempting to create new one...');
+        const createPromise = createUserProfile(user);
+        const createTimeoutPromise = new Promise<UserProfile | null>((resolve) => {
+          setTimeout(() => {
+            console.log('Profile creation timeout, using minimal profile');
+            resolve(null);
+          }, 3000); // 3 second timeout for profile creation
+        });
+
+        profile = await Promise.race([createPromise, createTimeoutPromise]);
+      }
+      
+      // If we still don't have a profile, create a minimal one
+      if (!profile) {
+        console.log('Creating minimal profile as fallback...');
+        profile = createMinimalProfile(user);
+      }
+      
+      setUserProfile(profile);
+      console.log('Profile handling completed successfully');
+      
+    } catch (error) {
+      console.error('Error in handleUserProfile:', error);
+      // Create minimal profile as ultimate fallback
+      const minimalProfile = createMinimalProfile(user);
+      setUserProfile(minimalProfile);
+    } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
     let mounted = true;
+    let loadingTimeout: NodeJS.Timeout;
 
     const initializeAuth = async () => {
       try {
         console.log('Initializing auth state...');
         
-        // Set a timeout for initialization
-        const initTimeout = setTimeout(() => {
-          console.warn('Auth initialization timeout');
+        // Set a hard timeout for the entire initialization process
+        loadingTimeout = setTimeout(() => {
+          console.warn('Auth initialization timeout - forcing loading to false');
           if (mounted) {
             setLoading(false);
           }
-        }, 12000); // 12 second timeout for initialization
+        }, 10000); // 10 second hard timeout
         
         const session = await getSessionWithRetry();
-        
-        clearTimeout(initTimeout);
         
         console.log('Initial session:', session?.user?.email || 'No session');
         
@@ -114,6 +119,11 @@ export function useAuthState() {
         if (mounted) {
           setLoading(false);
           handleConnectionError();
+        }
+      } finally {
+        // Clear the timeout since initialization completed
+        if (loadingTimeout) {
+          clearTimeout(loadingTimeout);
         }
       }
     };
@@ -152,6 +162,9 @@ export function useAuthState() {
 
     return () => {
       mounted = false;
+      if (loadingTimeout) {
+        clearTimeout(loadingTimeout);
+      }
       subscription.unsubscribe();
     };
   }, []);
