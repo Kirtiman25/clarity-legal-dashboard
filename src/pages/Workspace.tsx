@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +8,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import AppLayout from '@/components/layouts/AppLayout';
 
 const Workspace = () => {
   const [totalEarnings, setTotalEarnings] = useState(0);
@@ -90,59 +90,64 @@ const Workspace = () => {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50">
-        <Header title="Workspace" />
-        
-        <div className="container mx-auto px-4 pt-20 pb-24">
-          {/* Admin Badge */}
-          {isAdmin && (
-            <div className="mb-4">
-              <Badge variant="secondary" className="bg-red-100 text-red-800">
-                <Shield className="h-3 w-3 mr-1" />
-                Administrator
-              </Badge>
-            </div>
-          )}
-
-          <Card className="mb-6 bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-medium opacity-90">
-                {isAdmin ? 'Admin Access' : 'Total Earnings'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center space-x-2">
-                <DollarSign className="h-8 w-8" />
-                <span className="text-3xl font-bold">
-                  {isAdmin ? 'Full System Access' : `₹${totalEarnings.toLocaleString()}`}
-                </span>
+      <AppLayout>
+        <div className="min-h-screen bg-gray-50">
+          <Header title="Workspace" />
+          
+          <div className="container mx-auto px-4 pt-20 pb-24">
+            {/* Admin Badge */}
+            {isAdmin && (
+              <div className="mb-4">
+                <Badge variant="secondary" className="bg-red-100 text-red-800">
+                  <Shield className="h-3 w-3 mr-1" />
+                  Administrator
+                </Badge>
+                <p className="text-xs text-gray-600 mt-1">
+                  Press Ctrl+Shift+A or click the red button to open admin panel
+                </p>
               </div>
-            </CardContent>
-          </Card>
+            )}
 
-          <div className="space-y-4">
-            {menuItems.map((item, index) => (
-              <Card 
-                key={index} 
-                className="cursor-pointer hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1"
-                onClick={() => navigate(item.route)}
-              >
-                <CardContent className="flex items-center p-6">
-                  <div className={`${item.color} p-3 rounded-lg mr-4`}>
-                    <item.icon className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg text-gray-900">{item.title}</h3>
-                    <p className="text-gray-600 text-sm">{item.description}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+            <Card className="mb-6 bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium opacity-90">
+                  {isAdmin ? 'Admin Access' : 'Total Earnings'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center space-x-2">
+                  <DollarSign className="h-8 w-8" />
+                  <span className="text-3xl font-bold">
+                    {isAdmin ? 'Full System Access' : `₹${totalEarnings.toLocaleString()}`}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="space-y-4">
+              {menuItems.map((item, index) => (
+                <Card 
+                  key={index} 
+                  className="cursor-pointer hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1"
+                  onClick={() => navigate(item.route)}
+                >
+                  <CardContent className="flex items-center p-6">
+                    <div className={`${item.color} p-3 rounded-lg mr-4`}>
+                      <item.icon className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg text-gray-900">{item.title}</h3>
+                      <p className="text-gray-600 text-sm">{item.description}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
-        </div>
 
-        <Navigation />
-      </div>
+          <Navigation />
+        </div>
+      </AppLayout>
     </ProtectedRoute>
   );
 };

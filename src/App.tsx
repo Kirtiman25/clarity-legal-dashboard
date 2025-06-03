@@ -34,7 +34,16 @@ const App = () => (
             <Route path="/refer-earn" element={<ReferEarn />} />
             <Route path="/support" element={<Support />} />
             <Route path="/tracker" element={<Tracker />} />
+            
+            {/* Admin Routes */}
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/users" element={<AdminDashboard />} />
+            <Route path="/admin/tasks" element={<AdminDashboard />} />
+            <Route path="/admin/settings" element={<AdminDashboard />} />
+            <Route path="/admin/analytics" element={<AdminDashboard />} />
+            <Route path="/admin/monitor" element={<AdminDashboard />} />
+            <Route path="/admin/database" element={<AdminDashboard />} />
+            
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
