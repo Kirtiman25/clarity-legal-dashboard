@@ -48,29 +48,13 @@ export function useAuthState() {
     }
     
     try {
-      // Try to fetch existing profile first with a short timeout
-      const profilePromise = fetchUserProfile(user.id);
-      const timeoutPromise = new Promise<UserProfile | null>((resolve) => {
-        setTimeout(() => {
-          console.log('Profile fetch timeout, using minimal profile');
-          resolve(null);
-        }, 5000); // 5 second timeout for profile fetch
-      });
-
-      let profile = await Promise.race([profilePromise, timeoutPromise]);
+      // Try to fetch existing profile first
+      let profile = await fetchUserProfile(user.id);
       
-      // If no profile exists, try to create one quickly
+      // If no profile exists, try to create one
       if (!profile) {
         console.log('No profile found, attempting to create new one...');
-        const createPromise = createUserProfile(user);
-        const createTimeoutPromise = new Promise<UserProfile | null>((resolve) => {
-          setTimeout(() => {
-            console.log('Profile creation timeout, using minimal profile');
-            resolve(null);
-          }, 3000); // 3 second timeout for profile creation
-        });
-
-        profile = await Promise.race([createPromise, createTimeoutPromise]);
+        profile = await createUserProfile(user);
       }
       
       // If we still don't have a profile, create a minimal one
@@ -94,19 +78,10 @@ export function useAuthState() {
 
   useEffect(() => {
     let mounted = true;
-    let loadingTimeout: NodeJS.Timeout;
 
     const initializeAuth = async () => {
       try {
         console.log('Initializing auth state...');
-        
-        // Set a hard timeout for the entire initialization process
-        loadingTimeout = setTimeout(() => {
-          console.warn('Auth initialization timeout - forcing loading to false');
-          if (mounted) {
-            setLoading(false);
-          }
-        }, 10000); // 10 second hard timeout
         
         const session = await getSessionWithRetry();
         
@@ -126,11 +101,6 @@ export function useAuthState() {
         if (mounted) {
           setLoading(false);
           handleConnectionError();
-        }
-      } finally {
-        // Clear the timeout since initialization completed
-        if (loadingTimeout) {
-          clearTimeout(loadingTimeout);
         }
       }
     };
@@ -170,9 +140,6 @@ export function useAuthState() {
 
     return () => {
       mounted = false;
-      if (loadingTimeout) {
-        clearTimeout(loadingTimeout);
-      }
       subscription.unsubscribe();
     };
   }, []);
