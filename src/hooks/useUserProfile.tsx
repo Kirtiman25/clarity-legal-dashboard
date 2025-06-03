@@ -8,11 +8,19 @@ export const useUserProfileOperations = () => {
   const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
     try {
       console.log('Fetching user profile for:', userId);
-      const { data, error } = await supabase
+      
+      // Add a timeout to prevent hanging
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 10000);
+      });
+      
+      const fetchPromise = supabase
         .from('users')
         .select('*')
         .eq('id', userId)
         .single();
+
+      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
 
       if (error) {
         if (error.code === 'PGRST116') {
@@ -53,11 +61,18 @@ export const useUserProfileOperations = () => {
 
       console.log('Attempting to insert profile data:', profileData);
       
-      const { data, error } = await supabase
+      // Add timeout for profile creation too
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Profile creation timeout')), 10000);
+      });
+      
+      const createPromise = supabase
         .from('users')
         .insert([profileData])
         .select()
         .single();
+
+      const { data, error } = await Promise.race([createPromise, timeoutPromise]);
 
       if (error) {
         console.error('Error creating user profile:', error);

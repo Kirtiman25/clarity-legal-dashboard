@@ -21,6 +21,12 @@ export function useAuthState() {
       console.log('Email confirmed, fetching/creating profile...');
       
       try {
+        // Add a maximum time limit for the entire profile handling process
+        const profileTimeout = setTimeout(() => {
+          console.warn('Profile handling taking too long, clearing loading state');
+          setLoading(false);
+        }, 15000);
+
         let profile = await fetchUserProfile(user.id);
         
         if (!profile) {
@@ -29,6 +35,9 @@ export function useAuthState() {
         } else {
           console.log('Found existing profile:', profile);
         }
+        
+        // Clear the timeout since we completed successfully
+        clearTimeout(profileTimeout);
         
         if (profile) {
           setUserProfile(profile);
@@ -41,6 +50,7 @@ export function useAuthState() {
         console.error('Error in handleUserProfile:', error);
         // Don't block the user, just log the error
       } finally {
+        console.log('Clearing loading state in handleUserProfile finally block');
         setLoading(false);
       }
     } else {
@@ -57,7 +67,18 @@ export function useAuthState() {
       try {
         console.log('Initializing auth state...');
         
+        // Set a maximum initialization time
+        const initTimeout = setTimeout(() => {
+          console.warn('Auth initialization taking too long, clearing loading state');
+          if (mounted) {
+            setLoading(false);
+          }
+        }, 20000);
+        
         const session = await getSessionWithRetry();
+        
+        // Clear timeout since we got a response
+        clearTimeout(initTimeout);
         
         console.log('Initial session:', session?.user?.email || 'No session');
         
