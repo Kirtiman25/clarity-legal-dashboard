@@ -42,7 +42,7 @@ export const useUserProfileOperations = () => {
       };
 
       // Check if this is the admin email and set role accordingly
-      const isAdminEmail = user.email === 'admin@admin.com';
+      const isAdminEmail = user.email === 'clearctalyst123@gmail.com';
       
       const profileData = {
         id: user.id,
