@@ -16,45 +16,64 @@ export function useAuthState() {
   const { getSessionWithRetry, handleConnectionError } = useSessionOperations();
   const { showWelcomeToast } = useAuthNotifications();
 
+  const createMinimalProfile = (user: User): UserProfile => {
+    return {
+      id: user.id,
+      email: user.email!,
+      full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+      referral_code: Math.random().toString(36).substring(2, 8).toUpperCase(),
+      referred_by: user.user_metadata?.referred_by || null,
+      is_paid: false,
+      role: 'user',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+  };
+
   const handleUserProfile = async (user: User) => {
     if (user.email_confirmed_at) {
-      console.log('Email confirmed, fetching/creating profile...');
+      console.log('Email confirmed, handling profile...');
       
       try {
-        // Add a maximum time limit for the entire profile handling process
+        // Set a shorter timeout for the entire profile operation
         const profileTimeout = setTimeout(() => {
-          console.warn('Profile handling taking too long, clearing loading state');
+          console.warn('Profile operation timeout, using minimal profile');
+          const minimalProfile = createMinimalProfile(user);
+          setUserProfile(minimalProfile);
           setLoading(false);
-        }, 15000);
+        }, 8000); // Reduced timeout to 8 seconds
 
+        // Try to fetch existing profile first
         let profile = await fetchUserProfile(user.id);
         
+        // If no profile exists, try to create one
         if (!profile) {
           console.log('No profile found, creating new one...');
           profile = await createUserProfile(user);
-        } else {
-          console.log('Found existing profile:', profile);
         }
         
-        // Clear the timeout since we completed successfully
+        // Clear the timeout since we completed
         clearTimeout(profileTimeout);
         
-        if (profile) {
-          setUserProfile(profile);
-          console.log('Profile set successfully, clearing loading state');
-        } else {
-          console.error('Failed to create or fetch profile, but continuing...');
-          // Don't block the user from proceeding even if profile creation fails
+        // If we still don't have a profile, create a minimal one
+        if (!profile) {
+          console.log('Creating minimal profile as fallback...');
+          profile = createMinimalProfile(user);
         }
+        
+        setUserProfile(profile);
+        console.log('Profile handling completed successfully');
+        
       } catch (error) {
         console.error('Error in handleUserProfile:', error);
-        // Don't block the user, just log the error
+        // Create minimal profile as ultimate fallback
+        const minimalProfile = createMinimalProfile(user);
+        setUserProfile(minimalProfile);
       } finally {
-        console.log('Clearing loading state in handleUserProfile finally block');
         setLoading(false);
       }
     } else {
-      console.log('Email not confirmed yet, not creating profile');
+      console.log('Email not confirmed yet');
       setUserProfile(null);
       setLoading(false);
     }
@@ -67,17 +86,16 @@ export function useAuthState() {
       try {
         console.log('Initializing auth state...');
         
-        // Set a maximum initialization time
+        // Set a timeout for initialization
         const initTimeout = setTimeout(() => {
-          console.warn('Auth initialization taking too long, clearing loading state');
+          console.warn('Auth initialization timeout');
           if (mounted) {
             setLoading(false);
           }
-        }, 20000);
+        }, 12000); // 12 second timeout for initialization
         
         const session = await getSessionWithRetry();
         
-        // Clear timeout since we got a response
         clearTimeout(initTimeout);
         
         console.log('Initial session:', session?.user?.email || 'No session');
@@ -86,7 +104,6 @@ export function useAuthState() {
           setUser(session?.user ?? null);
           
           if (session?.user) {
-            console.log('User found in session, checking email confirmation status...');
             await handleUserProfile(session.user);
           } else {
             setLoading(false);
@@ -101,7 +118,6 @@ export function useAuthState() {
       }
     };
 
-    // Initialize auth state
     initializeAuth();
 
     // Listen for auth changes
@@ -113,16 +129,10 @@ export function useAuthState() {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        console.log('Auth state change: User signed in, checking email confirmation...');
-        
         if (session.user.email_confirmed_at) {
-          console.log('Email confirmed, handling profile...');
-          
           if (event === 'SIGNED_IN') {
-            console.log('User signed in with confirmed email, showing welcome toast');
             showWelcomeToast();
           }
-          
           await handleUserProfile(session.user);
         } else {
           console.log('Email not confirmed, clearing profile and loading');
