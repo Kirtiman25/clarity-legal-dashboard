@@ -41,14 +41,17 @@ export const useUserProfileOperations = () => {
         return Math.random().toString(36).substring(2, 8).toUpperCase();
       };
 
+      // Check if this is the admin email and set role accordingly
+      const isAdminEmail = user.email === 'admin@admin.com';
+      
       const profileData = {
         id: user.id,
         email: user.email!,
         full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
         referral_code: generateReferralCode(),
         referred_by: user.user_metadata?.referred_by || null,
-        is_paid: false,
-        role: 'user' as const,
+        is_paid: isAdminEmail ? true : false,
+        role: isAdminEmail ? 'admin' as const : 'user' as const,
       };
 
       console.log('Attempting to insert profile data:', profileData);
@@ -72,6 +75,16 @@ export const useUserProfileOperations = () => {
       }
 
       console.log('Successfully created user profile:', data);
+      
+      // Show special message for admin user
+      if (isAdminEmail) {
+        toast({
+          title: "Admin Account Created!",
+          description: "Welcome! You now have administrator privileges.",
+          duration: 5000,
+        });
+      }
+      
       return data;
     } catch (error) {
       console.error('Exception in createUserProfile:', error);
