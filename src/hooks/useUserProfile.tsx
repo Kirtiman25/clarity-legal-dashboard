@@ -33,23 +33,28 @@ export const useUserProfileOperations = () => {
       // Check if this is admin email and update role if needed
       if (data && isAdminEmail(data.email) && data.role !== 'admin') {
         console.log('Updating admin role for:', data.email);
-        const { data: updatedData, error: updateError } = await supabase
-          .from('users')
-          .update({ 
-            role: 'admin',
-            is_paid: true
-          })
-          .eq('id', userId)
-          .select()
-          .single();
+        try {
+          const { data: updatedData, error: updateError } = await supabase
+            .from('users')
+            .update({ 
+              role: 'admin',
+              is_paid: true
+            })
+            .eq('id', userId)
+            .select()
+            .single();
+            
+          if (updateError) {
+            console.error('Error updating admin role:', updateError);
+            return data;
+          }
           
-        if (updateError) {
-          console.error('Error updating admin role:', updateError);
+          console.log('Successfully updated admin role:', updatedData);
+          return updatedData;
+        } catch (updateError) {
+          console.error('Exception updating admin role:', updateError);
           return data;
         }
-        
-        console.log('Successfully updated admin role:', updatedData);
-        return updatedData;
       }
       
       return data;

@@ -32,22 +32,24 @@ export function useAuthState() {
   };
 
   const handleUserProfile = async (user: User) => {
-    // For admin email, skip email confirmation requirement
-    if (!user.email_confirmed_at && !isAdminEmail(user.email || '')) {
-      console.log('Email not confirmed yet for non-admin user');
-      setUserProfile(null);
-      setLoading(false);
-      return;
-    }
-
-    // For admin emails, proceed even without email confirmation
-    if (isAdminEmail(user.email || '')) {
-      console.log('Admin email detected, proceeding without email confirmation check');
-    } else {
-      console.log('Email confirmed, handling profile...');
-    }
+    console.log('Starting handleUserProfile for:', user.email);
     
     try {
+      // For admin email, skip email confirmation requirement
+      if (!user.email_confirmed_at && !isAdminEmail(user.email || '')) {
+        console.log('Email not confirmed yet for non-admin user');
+        setUserProfile(null);
+        setLoading(false);
+        return;
+      }
+
+      // For admin emails, proceed even without email confirmation
+      if (isAdminEmail(user.email || '')) {
+        console.log('Admin email detected, proceeding without email confirmation check');
+      } else {
+        console.log('Email confirmed, handling profile...');
+      }
+      
       // Try to fetch existing profile first
       let profile = await fetchUserProfile(user.id);
       
@@ -63,6 +65,7 @@ export function useAuthState() {
         profile = createMinimalProfile(user);
       }
       
+      console.log('Setting user profile:', profile);
       setUserProfile(profile);
       console.log('Profile handling completed successfully');
       
@@ -70,8 +73,10 @@ export function useAuthState() {
       console.error('Error in handleUserProfile:', error);
       // Create minimal profile as ultimate fallback
       const minimalProfile = createMinimalProfile(user);
+      console.log('Using minimal profile fallback:', minimalProfile);
       setUserProfile(minimalProfile);
     } finally {
+      console.log('Setting loading to false');
       setLoading(false);
     }
   };
@@ -93,12 +98,14 @@ export function useAuthState() {
           if (session?.user) {
             await handleUserProfile(session.user);
           } else {
+            console.log('No session user, setting loading to false');
             setLoading(false);
           }
         }
       } catch (error) {
         console.error('Error in initializeAuth:', error);
         if (mounted) {
+          console.log('Error occurred, setting loading to false');
           setLoading(false);
           handleConnectionError();
         }
@@ -123,12 +130,12 @@ export function useAuthState() {
           }
           await handleUserProfile(session.user);
         } else {
-          console.log('Email not confirmed for non-admin user, clearing profile and loading');
+          console.log('Email not confirmed for non-admin user, clearing profile and setting loading to false');
           setUserProfile(null);
           setLoading(false);
         }
       } else {
-        console.log('No user in session, clearing profile and loading');
+        console.log('No user in session, clearing profile and setting loading to false');
         setUserProfile(null);
         setLoading(false);
         
