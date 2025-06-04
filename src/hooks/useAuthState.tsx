@@ -60,9 +60,9 @@ export function useAuthState() {
       }
       
       // Try to fetch existing profile first with timeout
-      let profile = await Promise.race([
+      let profile: UserProfile | null = await Promise.race([
         fetchUserProfile(user.id),
-        new Promise((resolve) => setTimeout(() => resolve(null), 5000))
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000))
       ]);
       
       // If no profile exists, try to create one with timeout
@@ -70,7 +70,7 @@ export function useAuthState() {
         console.log('No profile found, attempting to create new one...');
         profile = await Promise.race([
           createUserProfile(user),
-          new Promise((resolve) => setTimeout(() => resolve(null), 5000))
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000))
         ]);
       }
       
