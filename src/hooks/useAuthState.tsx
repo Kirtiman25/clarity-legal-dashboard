@@ -34,12 +34,21 @@ export function useAuthState() {
   const handleUserProfile = async (user: User) => {
     console.log('Starting handleUserProfile for:', user.email);
     
+    // Set a timeout to ensure loading doesn't get stuck
+    const timeoutId = setTimeout(() => {
+      console.log('Profile handling timeout, using minimal profile');
+      const minimalProfile = createMinimalProfile(user);
+      setUserProfile(minimalProfile);
+      setLoading(false);
+    }, 10000); // 10 second timeout
+    
     try {
       // For admin email, skip email confirmation requirement
       if (!user.email_confirmed_at && !isAdminEmail(user.email || '')) {
         console.log('Email not confirmed yet for non-admin user');
         setUserProfile(null);
         setLoading(false);
+        clearTimeout(timeoutId);
         return;
       }
 
@@ -50,13 +59,19 @@ export function useAuthState() {
         console.log('Email confirmed, handling profile...');
       }
       
-      // Try to fetch existing profile first
-      let profile = await fetchUserProfile(user.id);
+      // Try to fetch existing profile first with timeout
+      let profile = await Promise.race([
+        fetchUserProfile(user.id),
+        new Promise((resolve) => setTimeout(() => resolve(null), 5000))
+      ]);
       
-      // If no profile exists, try to create one
+      // If no profile exists, try to create one with timeout
       if (!profile) {
         console.log('No profile found, attempting to create new one...');
-        profile = await createUserProfile(user);
+        profile = await Promise.race([
+          createUserProfile(user),
+          new Promise((resolve) => setTimeout(() => resolve(null), 5000))
+        ]);
       }
       
       // If we still don't have a profile, create a minimal one
@@ -76,6 +91,7 @@ export function useAuthState() {
       console.log('Using minimal profile fallback:', minimalProfile);
       setUserProfile(minimalProfile);
     } finally {
+      clearTimeout(timeoutId);
       console.log('Setting loading to false');
       setLoading(false);
     }
