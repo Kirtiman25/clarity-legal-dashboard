@@ -18,7 +18,7 @@ const EmailConfirmationScreen = ({ userEmail, onBackToSignIn }: EmailConfirmatio
             <img 
               src="/lovable-uploads/bf6a79a0-729c-4263-ac44-d1f2cda8c9cb.png" 
               alt="Clar Catalyst Logo" 
-              className="h-20 w-auto"
+              className="h-32 w-auto"
             />
           </div>
           <CardTitle className="text-2xl font-bold text-gray-900">
