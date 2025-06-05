@@ -22,7 +22,8 @@ const Tasks = () => {
     try {
       setLoading(true);
       const userTasks = await fetchUserTasks();
-      setTasks(userTasks.filter(task => task.status === 'pending'));
+      console.log('Loaded tasks:', userTasks);
+      setTasks(userTasks);
     } catch (error) {
       console.error('Error loading tasks:', error);
     } finally {
@@ -43,9 +44,9 @@ const Tasks = () => {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
-        <Header title="Tasks" />
+        <Header title="My Tasks" />
         
-        <div className="container mx-auto px-4 pt-20 pb-24">
+        <div className="container mx-auto px-4 pt-24 pb-24">
           <TaskList 
             tasks={tasks}
             loading={loading}

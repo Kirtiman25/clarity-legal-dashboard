@@ -8,9 +8,19 @@ export type Task = Tables<'tasks'>;
 export const fetchUserTasks = async (): Promise<Task[]> => {
   try {
     console.log('Fetching user tasks from database...');
+    
+    // Get current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      console.error('No authenticated user found:', userError);
+      return [];
+    }
+
     const { data, error } = await supabase
       .from('tasks')
       .select('*')
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
     if (error) {
