@@ -1,26 +1,26 @@
 
 import Navigation from '@/components/Navigation';
 import Header from '@/components/Header';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import ReferralDashboard from '@/components/referral/ReferralDashboard';
+import AdminRoute from '@/components/AdminRoute';
+import AnalyticsDashboard from '@/components/analytics/AnalyticsDashboard';
 import AppLayout from '@/components/layouts/AppLayout';
 
-const ReferEarn = () => {
+const AdminAnalytics = () => {
   return (
-    <ProtectedRoute>
+    <AdminRoute>
       <AppLayout>
         <div className="min-h-screen bg-gray-50">
-          <Header title="Refer and Earn" />
+          <Header title="System Analytics" />
           
           <div className="container mx-auto px-4 pt-20 pb-24">
-            <ReferralDashboard />
+            <AnalyticsDashboard />
           </div>
 
           <Navigation />
         </div>
       </AppLayout>
-    </ProtectedRoute>
+    </AdminRoute>
   );
 };
 
-export default ReferEarn;
+export default AdminAnalytics;

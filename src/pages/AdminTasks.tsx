@@ -1,26 +1,26 @@
 
 import Navigation from '@/components/Navigation';
 import Header from '@/components/Header';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import ReferralDashboard from '@/components/referral/ReferralDashboard';
+import AdminRoute from '@/components/AdminRoute';
+import TaskManagement from '@/components/admin/TaskManagement';
 import AppLayout from '@/components/layouts/AppLayout';
 
-const ReferEarn = () => {
+const AdminTasks = () => {
   return (
-    <ProtectedRoute>
+    <AdminRoute>
       <AppLayout>
         <div className="min-h-screen bg-gray-50">
-          <Header title="Refer and Earn" />
+          <Header title="Task Management" />
           
           <div className="container mx-auto px-4 pt-20 pb-24">
-            <ReferralDashboard />
+            <TaskManagement />
           </div>
 
           <Navigation />
         </div>
       </AppLayout>
-    </ProtectedRoute>
+    </AdminRoute>
   );
 };
 
-export default ReferEarn;
+export default AdminTasks;

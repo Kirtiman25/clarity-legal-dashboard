@@ -14,6 +14,9 @@ import ReferEarn from "./pages/ReferEarn";
 import Support from "./pages/Support";
 import Tracker from "./pages/Tracker";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminUsers from "./pages/AdminUsers";
+import AdminTasks from "./pages/AdminTasks";
+import AdminAnalytics from "./pages/AdminAnalytics";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,10 +40,10 @@ const App = () => (
             
             {/* Admin Routes */}
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/users" element={<AdminDashboard />} />
-            <Route path="/admin/tasks" element={<AdminDashboard />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin/tasks" element={<AdminTasks />} />
+            <Route path="/admin/analytics" element={<AdminAnalytics />} />
             <Route path="/admin/settings" element={<AdminDashboard />} />
-            <Route path="/admin/analytics" element={<AdminDashboard />} />
             <Route path="/admin/monitor" element={<AdminDashboard />} />
             <Route path="/admin/database" element={<AdminDashboard />} />
             
