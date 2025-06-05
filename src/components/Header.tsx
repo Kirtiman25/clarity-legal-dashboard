@@ -36,7 +36,7 @@ const Header = ({ title }: HeaderProps) => {
           <img 
             src="/lovable-uploads/fa1e0532-ff2a-474a-a3c6-ce13d2cbb813.png" 
             alt="Clar Catalyst Logo" 
-            className="h-6 w-auto"
+            className="h-8 w-auto"
           />
           <h1 className="text-xl font-bold text-gray-900">{title}</h1>
         </div>
