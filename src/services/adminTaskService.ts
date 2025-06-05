@@ -7,11 +7,22 @@ export type Task = Tables<'tasks'>;
 
 export const createTask = async (taskData: Partial<Task>) => {
   try {
+    // Ensure required fields are present
+    if (!taskData.title || !taskData.user_id || !taskData.task_type) {
+      throw new Error('Title, user_id, and task_type are required');
+    }
+
     const { data, error } = await supabase
       .from('tasks')
       .insert({
-        ...taskData,
-        status: 'pending'
+        title: taskData.title,
+        task_type: taskData.task_type,
+        user_id: taskData.user_id,
+        status: 'pending',
+        admin_note: taskData.admin_note || null,
+        case_name: taskData.case_name || null,
+        client_name: taskData.client_name || null,
+        invoice_amount: taskData.invoice_amount || null,
       })
       .select()
       .single();
