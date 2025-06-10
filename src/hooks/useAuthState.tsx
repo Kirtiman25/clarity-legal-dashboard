@@ -11,6 +11,7 @@ export function useAuthState() {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
 
   const { fetchUserProfile, createUserProfile, isAdminEmail } = useUserProfileOperations();
   const { getSessionWithRetry, handleConnectionError } = useSessionOperations();
@@ -32,6 +33,12 @@ export function useAuthState() {
   };
 
   const handleUserProfile = async (user: User, showWelcome: boolean = false) => {
+    if (!user) {
+      setUserProfile(null);
+      setLoading(false);
+      return;
+    }
+
     console.log('Processing user profile for:', user.email);
     
     try {
@@ -39,7 +46,7 @@ export function useAuthState() {
       
       // For confirmed users or admins, create/fetch profile
       if (user.email_confirmed_at || isAdmin) {
-        console.log('User email confirmed or admin, creating profile...');
+        console.log('User email confirmed or admin, processing profile...');
         
         let profile: UserProfile | null = await fetchUserProfile(user.id);
         
@@ -76,16 +83,18 @@ export function useAuthState() {
     let mounted = true;
 
     const initializeAuth = async () => {
+      if (initialized) return;
+
       try {
         console.log('Initializing authentication...');
         
-        // Check for existing session
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('Session error:', error);
           if (mounted) {
             setLoading(false);
+            setInitialized(true);
           }
           return;
         }
@@ -101,21 +110,25 @@ export function useAuthState() {
             setUserProfile(null);
             setLoading(false);
           }
+          setInitialized(true);
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
         if (mounted) {
           setLoading(false);
+          setInitialized(true);
           handleConnectionError();
         }
       }
     };
 
-    initializeAuth();
+    if (!initialized) {
+      initializeAuth();
+    }
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return;
+      if (!mounted || !initialized) return;
       
       console.log('Auth state changed:', event, session?.user?.email || 'No session');
       
@@ -151,7 +164,7 @@ export function useAuthState() {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [initialized]);
 
   return {
     user,
