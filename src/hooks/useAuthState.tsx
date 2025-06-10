@@ -31,47 +31,29 @@ export function useAuthState() {
     };
   };
 
-  const handleUserProfile = async (user: User) => {
-    console.log('Starting handleUserProfile for:', user.email);
-    
-    // Set a timeout to ensure loading doesn't get stuck
-    const timeoutId = setTimeout(() => {
-      console.log('Profile handling timeout, using minimal profile');
-      const minimalProfile = createMinimalProfile(user);
-      setUserProfile(minimalProfile);
-      setLoading(false);
-    }, 10000); // 10 second timeout
+  const handleUserProfile = async (user: User, isEmailConfirmed: boolean = false) => {
+    console.log('Starting handleUserProfile for:', user.email, 'Email confirmed:', isEmailConfirmed);
     
     try {
       // For admin email, skip email confirmation requirement
-      if (!user.email_confirmed_at && !isAdminEmail(user.email || '')) {
+      const isAdmin = isAdminEmail(user.email || '');
+      if (!user.email_confirmed_at && !isAdmin) {
         console.log('Email not confirmed yet for non-admin user');
         setUserProfile(null);
         setLoading(false);
-        clearTimeout(timeoutId);
         return;
       }
 
-      // For admin emails, proceed even without email confirmation
-      if (isAdminEmail(user.email || '')) {
-        console.log('Admin email detected, proceeding without email confirmation check');
-      } else {
-        console.log('Email confirmed, handling profile...');
-      }
+      // For admin emails or confirmed emails, proceed with profile creation
+      console.log('Processing profile for confirmed user or admin');
       
-      // Try to fetch existing profile first with timeout
-      let profile: UserProfile | null = await Promise.race([
-        fetchUserProfile(user.id),
-        new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000))
-      ]);
+      // Try to fetch existing profile first
+      let profile: UserProfile | null = await fetchUserProfile(user.id);
       
-      // If no profile exists, try to create one with timeout
+      // If no profile exists, create one
       if (!profile) {
-        console.log('No profile found, attempting to create new one...');
-        profile = await Promise.race([
-          createUserProfile(user),
-          new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000))
-        ]);
+        console.log('No profile found, creating new one...');
+        profile = await createUserProfile(user);
       }
       
       // If we still don't have a profile, create a minimal one
@@ -82,7 +64,11 @@ export function useAuthState() {
       
       console.log('Setting user profile:', profile);
       setUserProfile(profile);
-      console.log('Profile handling completed successfully');
+      
+      // Show welcome message for newly confirmed emails
+      if (isEmailConfirmed) {
+        showWelcomeToast();
+      }
       
     } catch (error) {
       console.error('Error in handleUserProfile:', error);
@@ -91,7 +77,6 @@ export function useAuthState() {
       console.log('Using minimal profile fallback:', minimalProfile);
       setUserProfile(minimalProfile);
     } finally {
-      clearTimeout(timeoutId);
       console.log('Setting loading to false');
       setLoading(false);
     }
@@ -139,8 +124,14 @@ export function useAuthState() {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        // For admin emails, skip email confirmation check, for others require it
-        if (isAdminEmail(session.user.email || '') || session.user.email_confirmed_at) {
+        const isAdmin = isAdminEmail(session.user.email || '');
+        const isEmailConfirmed = event === 'TOKEN_REFRESHED' || session.user.email_confirmed_at;
+        
+        // Handle email confirmation event specifically
+        if (event === 'TOKEN_REFRESHED' && session.user.email_confirmed_at) {
+          console.log('Email confirmation detected, processing profile...');
+          await handleUserProfile(session.user, true);
+        } else if (isAdmin || session.user.email_confirmed_at) {
           if (event === 'SIGNED_IN') {
             showWelcomeToast();
           }
