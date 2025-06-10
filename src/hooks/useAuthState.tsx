@@ -32,55 +32,44 @@ export function useAuthState() {
   };
 
   const handleUserProfile = async (user: User, showWelcome: boolean = false) => {
-    console.log('Starting handleUserProfile for:', user.email, 'Show welcome:', showWelcome);
+    console.log('Processing user profile for:', user.email);
     
     try {
-      // For admin email, skip email confirmation requirement
       const isAdmin = isAdminEmail(user.email || '');
       
-      // If email not confirmed and not admin, don't create profile yet
-      if (!user.email_confirmed_at && !isAdmin) {
-        console.log('Email not confirmed yet for non-admin user, clearing profile');
+      // For confirmed users or admins, create/fetch profile
+      if (user.email_confirmed_at || isAdmin) {
+        console.log('User email confirmed or admin, creating profile...');
+        
+        let profile: UserProfile | null = await fetchUserProfile(user.id);
+        
+        if (!profile) {
+          console.log('No profile found, creating new one...');
+          profile = await createUserProfile(user);
+        }
+        
+        if (!profile) {
+          console.log('Creating minimal profile as fallback...');
+          profile = createMinimalProfile(user);
+        }
+        
+        setUserProfile(profile);
+        
+        if (showWelcome) {
+          showWelcomeToast();
+        }
+      } else {
+        // User exists but email not confirmed
+        console.log('User email not confirmed, no profile created');
         setUserProfile(null);
-        setLoading(false);
-        return;
       }
-
-      console.log('Email confirmed or admin user, processing profile...');
-      
-      // Try to fetch existing profile first
-      let profile: UserProfile | null = await fetchUserProfile(user.id);
-      
-      // If no profile exists, create one
-      if (!profile) {
-        console.log('No profile found, creating new one...');
-        profile = await createUserProfile(user);
-      }
-      
-      // If we still don't have a profile, create a minimal one
-      if (!profile) {
-        console.log('Creating minimal profile as fallback...');
-        profile = createMinimalProfile(user);
-      }
-      
-      console.log('Setting user profile:', profile);
-      setUserProfile(profile);
-      
-      // Show welcome message if requested
-      if (showWelcome) {
-        showWelcomeToast();
-      }
-      
     } catch (error) {
       console.error('Error in handleUserProfile:', error);
-      // Create minimal profile as ultimate fallback
       const minimalProfile = createMinimalProfile(user);
-      console.log('Using minimal profile fallback:', minimalProfile);
       setUserProfile(minimalProfile);
-    } finally {
-      console.log('Setting loading to false');
-      setLoading(false);
     }
+    
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -88,26 +77,34 @@ export function useAuthState() {
 
     const initializeAuth = async () => {
       try {
-        console.log('Initializing auth state...');
+        console.log('Initializing authentication...');
         
-        const session = await getSessionWithRetry();
+        // Check for existing session
+        const { data: { session }, error } = await supabase.auth.getSession();
         
-        console.log('Initial session:', session?.user?.email || 'No session');
+        if (error) {
+          console.error('Session error:', error);
+          if (mounted) {
+            setLoading(false);
+          }
+          return;
+        }
+        
+        console.log('Initial session check:', session?.user?.email || 'No session');
         
         if (mounted) {
-          setUser(session?.user ?? null);
-          
           if (session?.user) {
+            setUser(session.user);
             await handleUserProfile(session.user);
           } else {
-            console.log('No session user, setting loading to false');
+            setUser(null);
+            setUserProfile(null);
             setLoading(false);
           }
         }
       } catch (error) {
-        console.error('Error in initializeAuth:', error);
+        console.error('Auth initialization error:', error);
         if (mounted) {
-          console.log('Error occurred, setting loading to false');
           setLoading(false);
           handleConnectionError();
         }
@@ -116,34 +113,35 @@ export function useAuthState() {
 
     initializeAuth();
 
-    // Listen for auth changes
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
       
-      console.log('Auth state change:', event, session?.user?.email || 'No session');
+      console.log('Auth state changed:', event, session?.user?.email || 'No session');
       
-      setUser(session?.user ?? null);
+      // Handle different auth events
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setUserProfile(null);
+        setLoading(false);
+        return;
+      }
       
       if (session?.user) {
-        const isAdmin = isAdminEmail(session.user.email || '');
+        setUser(session.user);
         
-        // Handle different auth events
-        if (event === 'SIGNED_IN') {
-          console.log('User signed in, processing profile with welcome message');
-          await handleUserProfile(session.user, true);
-        } else if (event === 'TOKEN_REFRESHED' && session.user.email_confirmed_at) {
-          console.log('Email confirmation detected via token refresh');
-          await handleUserProfile(session.user, true);
-        } else if (isAdmin || session.user.email_confirmed_at) {
-          console.log('Processing profile for confirmed user or admin');
+        // Handle sign in or token refresh with confirmed email
+        if (event === 'SIGNED_IN' || (event === 'TOKEN_REFRESHED' && session.user.email_confirmed_at)) {
+          await handleUserProfile(session.user, event === 'SIGNED_IN');
+        } else if (session.user.email_confirmed_at || isAdminEmail(session.user.email || '')) {
           await handleUserProfile(session.user);
         } else {
-          console.log('Email not confirmed for non-admin user, setting loading to false');
+          // User not confirmed yet
           setUserProfile(null);
           setLoading(false);
         }
       } else {
-        console.log('No user in session, clearing profile and setting loading to false');
+        setUser(null);
         setUserProfile(null);
         setLoading(false);
       }

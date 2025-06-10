@@ -8,7 +8,7 @@ export const signUpUser = async (
   fullName: string, 
   referralCode?: string
 ) => {
-  console.log('Attempting signup for:', email);
+  console.log('Starting signup for:', email);
   
   try {
     const { data, error } = await supabase.auth.signUp({
@@ -26,9 +26,8 @@ export const signUpUser = async (
     if (error) {
       console.error('Signup error:', error);
       
-      // Handle specific error cases
       if (error.message.includes('signup_disabled') || error.message.includes('Signups not allowed')) {
-        throw new Error('Account registration is currently disabled. Please contact support or try again later.');
+        throw new Error('Account registration is currently disabled. Please contact support.');
       } else if (error.message.includes('User already registered')) {
         throw new Error('An account with this email already exists. Please try signing in instead.');
       } else if (error.message.includes('Invalid email')) {
@@ -40,38 +39,37 @@ export const signUpUser = async (
       throw error;
     }
 
-    console.log('Signup response:', { 
+    console.log('Signup successful:', { 
       user: !!data.user, 
       session: !!data.session,
       needsConfirmation: data.user && !data.session
     });
 
-    // Check if email confirmation is required
+    // Show appropriate message based on email confirmation requirement
     if (data.user && !data.session) {
       console.log('Email confirmation required for:', email);
       toast({
         title: "Registration Successful!",
-        description: "Please check your email and click the confirmation link to verify your account. After verification, return here to sign in.",
-        duration: 15000,
+        description: "Please check your email and click the verification link to activate your account. After verification, return here to sign in.",
+        duration: 10000,
       });
     } else if (data.user && data.session) {
-      console.log('User signed up and signed in immediately:', email);
+      console.log('User signed up and logged in immediately:', email);
       toast({
         title: "Account Created!",
         description: "Welcome! Your account has been created successfully.",
       });
     }
 
-    console.log('Signup completed successfully for:', email);
     return data;
   } catch (error: any) {
-    console.error('Signup process failed:', error);
+    console.error('Signup failed:', error);
     throw error;
   }
 };
 
 export const signInUser = async (email: string, password: string) => {
-  console.log('Attempting signin for:', email);
+  console.log('Starting signin for:', email);
   
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -97,16 +95,16 @@ export const signInUser = async (email: string, password: string) => {
       throw new Error(errorMessage);
     }
 
-    console.log('Signin successful for user:', data.user?.email);
+    console.log('Signin successful for:', data.user?.email);
     return data;
   } catch (error: any) {
-    console.error('Signin process failed:', error);
+    console.error('Signin failed:', error);
     throw error;
   }
 };
 
 export const signOutUser = async () => {
-  console.log('Attempting signout');
+  console.log('Starting signout');
   
   try {
     const { error } = await supabase.auth.signOut();
@@ -121,7 +119,7 @@ export const signOutUser = async () => {
       description: "You have been successfully logged out",
     });
   } catch (error: any) {
-    console.error('Signout process failed:', error);
+    console.error('Signout failed:', error);
     throw error;
   }
 };

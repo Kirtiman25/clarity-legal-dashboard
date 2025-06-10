@@ -9,10 +9,10 @@ import AuthForm from '@/components/auth/AuthForm';
 const Index = () => {
   const navigate = useNavigate();
   const { user, userProfile, loading: authLoading, isAdmin } = useAuth();
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [emailVerificationSuccess, setEmailVerificationSuccess] = useState(false);
 
   useEffect(() => {
-    console.log('Index - Auth state:', { 
+    console.log('Index page - Auth state:', { 
       user: user?.email, 
       userProfile: !!userProfile, 
       authLoading,
@@ -20,42 +20,42 @@ const Index = () => {
       isAdmin
     });
     
-    // Check URL parameters for email confirmation
+    // Check for email confirmation in URL
     const urlParams = new URLSearchParams(window.location.search);
     const accessToken = urlParams.get('access_token');
     const refreshToken = urlParams.get('refresh_token');
+    const type = urlParams.get('type');
     
-    if (accessToken && refreshToken) {
-      console.log('Email confirmation tokens detected in URL');
-      setShowSuccessMessage(true);
-      // Clean up URL parameters
+    if (accessToken && refreshToken && type === 'signup') {
+      console.log('Email verification detected in URL parameters');
+      setEmailVerificationSuccess(true);
+      // Clean URL
       window.history.replaceState({}, document.title, window.location.pathname);
-      // Don't redirect immediately, let the user see the success message
       return;
     }
     
-    // Only redirect if not showing success message and user has confirmed profile
-    if (!authLoading && !showSuccessMessage && user && userProfile && (user.email_confirmed_at || isAdmin)) {
-      console.log('Redirecting to workspace');
+    // Redirect authenticated and confirmed users to workspace
+    if (!authLoading && user && userProfile && (user.email_confirmed_at || isAdmin)) {
+      console.log('Redirecting confirmed user to workspace');
       navigate('/workspace');
     }
-  }, [user, userProfile, authLoading, isAdmin, navigate, showSuccessMessage]);
+  }, [user, userProfile, authLoading, isAdmin, navigate]);
 
   const handleBackToSignIn = () => {
-    setShowSuccessMessage(false);
+    setEmailVerificationSuccess(false);
   };
 
   const handleSignupSuccess = () => {
-    console.log('Signup completed, user should see email confirmation screen');
+    console.log('Signup successful - user will need to verify email');
   };
 
-  // Show loading screen during auth initialization
+  // Show loading during auth initialization
   if (authLoading) {
     return <LoadingScreen />;
   }
 
-  // Show success message if user just confirmed email via URL parameters
-  if (showSuccessMessage) {
+  // Show email verification success message
+  if (emailVerificationSuccess) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
@@ -90,7 +90,7 @@ const Index = () => {
     );
   }
 
-  // If user exists but email is not confirmed AND user is not admin, show email confirmation screen
+  // Show email confirmation screen for unverified users
   if (user && !user.email_confirmed_at && !isAdmin) {
     return (
       <EmailConfirmationScreen 
@@ -100,7 +100,7 @@ const Index = () => {
     );
   }
 
-  // Show the main auth form
+  // Show auth form for new users or sign in
   return <AuthForm onSignupSuccess={handleSignupSuccess} />;
 };
 
