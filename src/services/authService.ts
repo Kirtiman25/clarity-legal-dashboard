@@ -51,8 +51,8 @@ export const signUpUser = async (
       console.log('Email confirmation required for:', email);
       toast({
         title: "Registration Successful!",
-        description: "Please check your email and click the confirmation link to complete your registration. Then return here to sign in.",
-        duration: 15000, // Show longer for important messages
+        description: "Please check your email and click the confirmation link to verify your account. After verification, return here to sign in.",
+        duration: 15000,
       });
     } else if (data.user && data.session) {
       console.log('User signed up and signed in immediately:', email);

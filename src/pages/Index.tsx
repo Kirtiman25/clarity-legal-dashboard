@@ -30,16 +30,16 @@ const Index = () => {
       setShowSuccessMessage(true);
       // Clean up URL parameters
       window.history.replaceState({}, document.title, window.location.pathname);
+      // Don't redirect immediately, let the user see the success message
+      return;
     }
     
-    // Redirect to workspace if user has profile and either:
-    // 1. Email is confirmed, OR
-    // 2. User is admin (admin can access without email confirmation)
-    if (!authLoading && user && userProfile && (user.email_confirmed_at || isAdmin)) {
+    // Only redirect if not showing success message and user has confirmed profile
+    if (!authLoading && !showSuccessMessage && user && userProfile && (user.email_confirmed_at || isAdmin)) {
       console.log('Redirecting to workspace');
       navigate('/workspace');
     }
-  }, [user, userProfile, authLoading, isAdmin, navigate]);
+  }, [user, userProfile, authLoading, isAdmin, navigate, showSuccessMessage]);
 
   const handleBackToSignIn = () => {
     setShowSuccessMessage(false);
@@ -49,13 +49,13 @@ const Index = () => {
     console.log('Signup completed, user should see email confirmation screen');
   };
 
-  // Show loading only when authLoading is true
+  // Show loading screen during auth initialization
   if (authLoading) {
     return <LoadingScreen />;
   }
 
-  // Show success message if user just confirmed email
-  if (showSuccessMessage && user?.email_confirmed_at) {
+  // Show success message if user just confirmed email via URL parameters
+  if (showSuccessMessage) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
@@ -75,7 +75,7 @@ const Index = () => {
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Email Verified Successfully!</h2>
               <p className="text-gray-600 mb-6">
-                Your email has been confirmed. You can now sign in to access your account.
+                Your email has been confirmed and your account is now active. You can now sign in to access your dashboard.
               </p>
               <button
                 onClick={handleBackToSignIn}
@@ -91,7 +91,7 @@ const Index = () => {
   }
 
   // If user exists but email is not confirmed AND user is not admin, show email confirmation screen
-  if (user && !user.email_confirmed_at && !isAdmin && !authLoading) {
+  if (user && !user.email_confirmed_at && !isAdmin) {
     return (
       <EmailConfirmationScreen 
         userEmail={user.email || ''} 

@@ -31,21 +31,22 @@ export function useAuthState() {
     };
   };
 
-  const handleUserProfile = async (user: User, isEmailConfirmed: boolean = false) => {
-    console.log('Starting handleUserProfile for:', user.email, 'Email confirmed:', isEmailConfirmed);
+  const handleUserProfile = async (user: User, showWelcome: boolean = false) => {
+    console.log('Starting handleUserProfile for:', user.email, 'Show welcome:', showWelcome);
     
     try {
       // For admin email, skip email confirmation requirement
       const isAdmin = isAdminEmail(user.email || '');
+      
+      // If email not confirmed and not admin, don't create profile yet
       if (!user.email_confirmed_at && !isAdmin) {
-        console.log('Email not confirmed yet for non-admin user');
+        console.log('Email not confirmed yet for non-admin user, clearing profile');
         setUserProfile(null);
         setLoading(false);
         return;
       }
 
-      // For admin emails or confirmed emails, proceed with profile creation
-      console.log('Processing profile for confirmed user or admin');
+      console.log('Email confirmed or admin user, processing profile...');
       
       // Try to fetch existing profile first
       let profile: UserProfile | null = await fetchUserProfile(user.id);
@@ -65,8 +66,8 @@ export function useAuthState() {
       console.log('Setting user profile:', profile);
       setUserProfile(profile);
       
-      // Show welcome message for newly confirmed emails
-      if (isEmailConfirmed) {
+      // Show welcome message if requested
+      if (showWelcome) {
         showWelcomeToast();
       }
       
@@ -125,19 +126,19 @@ export function useAuthState() {
       
       if (session?.user) {
         const isAdmin = isAdminEmail(session.user.email || '');
-        const isEmailConfirmed = event === 'TOKEN_REFRESHED' || session.user.email_confirmed_at;
         
-        // Handle email confirmation event specifically
-        if (event === 'TOKEN_REFRESHED' && session.user.email_confirmed_at) {
-          console.log('Email confirmation detected, processing profile...');
+        // Handle different auth events
+        if (event === 'SIGNED_IN') {
+          console.log('User signed in, processing profile with welcome message');
+          await handleUserProfile(session.user, true);
+        } else if (event === 'TOKEN_REFRESHED' && session.user.email_confirmed_at) {
+          console.log('Email confirmation detected via token refresh');
           await handleUserProfile(session.user, true);
         } else if (isAdmin || session.user.email_confirmed_at) {
-          if (event === 'SIGNED_IN') {
-            showWelcomeToast();
-          }
+          console.log('Processing profile for confirmed user or admin');
           await handleUserProfile(session.user);
         } else {
-          console.log('Email not confirmed for non-admin user, clearing profile and setting loading to false');
+          console.log('Email not confirmed for non-admin user, setting loading to false');
           setUserProfile(null);
           setLoading(false);
         }
@@ -145,10 +146,6 @@ export function useAuthState() {
         console.log('No user in session, clearing profile and setting loading to false');
         setUserProfile(null);
         setLoading(false);
-        
-        if (event === 'SIGNED_OUT') {
-          console.log('User signed out');
-        }
       }
     });
 
