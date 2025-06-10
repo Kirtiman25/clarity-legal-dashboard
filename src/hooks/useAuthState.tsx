@@ -118,13 +118,11 @@ export function useAuthState() {
       
       console.log('Auth state changed:', event, session?.user?.email || 'No session');
       
-      // Always set loading to false after any auth state change
-      setLoading(false);
-      
       // Handle different auth events
       if (event === 'SIGNED_OUT') {
         setUser(null);
         setUserProfile(null);
+        setLoading(false);
         return;
       }
       
@@ -144,6 +142,9 @@ export function useAuthState() {
         setUser(null);
         setUserProfile(null);
       }
+      
+      // Always set loading to false after processing
+      setLoading(false);
     });
 
     return () => {
