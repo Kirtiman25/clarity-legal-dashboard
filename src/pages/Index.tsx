@@ -10,7 +10,6 @@ const Index = () => {
   const navigate = useNavigate();
   const { user, userProfile, loading: authLoading, isAdmin } = useAuth();
   const [emailVerificationSuccess, setEmailVerificationSuccess] = useState(false);
-  const [urlChecked, setUrlChecked] = useState(false);
 
   useEffect(() => {
     console.log('Index page - Auth state:', { 
@@ -18,12 +17,11 @@ const Index = () => {
       userProfile: !!userProfile, 
       authLoading,
       emailConfirmed: user?.email_confirmed_at ? 'Yes' : 'No',
-      isAdmin,
-      urlChecked
+      isAdmin
     });
     
-    // Only check URL once when component mounts
-    if (!urlChecked && !authLoading) {
+    // Check for email verification in URL only once when not loading
+    if (!authLoading && !emailVerificationSuccess) {
       const checkEmailVerification = () => {
         const urlParams = new URLSearchParams(window.location.search);
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
@@ -34,21 +32,18 @@ const Index = () => {
         const type = urlParams.get('type') || hashParams.get('type');
         const tokenHash = urlParams.get('token_hash') || hashParams.get('token_hash');
         const error = urlParams.get('error') || hashParams.get('error');
-        const errorDescription = urlParams.get('error_description') || hashParams.get('error_description');
         
         console.log('URL verification check:', { 
           accessToken: !!accessToken, 
           refreshToken: !!refreshToken, 
           type, 
           tokenHash: !!tokenHash,
-          error,
-          errorDescription
+          error
         });
         
         // If there's an error in the URL, don't show verification success
         if (error) {
-          console.log('Error in verification URL:', error, errorDescription);
-          // Clean URL
+          console.log('Error in verification URL:', error);
           window.history.replaceState({}, document.title, window.location.pathname);
           return false;
         }
@@ -57,8 +52,6 @@ const Index = () => {
         if (accessToken || refreshToken || tokenHash || type === 'signup') {
           console.log('Email verification detected in URL parameters');
           setEmailVerificationSuccess(true);
-          
-          // Clean URL - remove all params
           window.history.replaceState({}, document.title, window.location.pathname);
           return true;
         }
@@ -67,7 +60,6 @@ const Index = () => {
       };
       
       checkEmailVerification();
-      setUrlChecked(true);
     }
     
     // Handle navigation for authenticated users
@@ -75,7 +67,7 @@ const Index = () => {
       console.log('Redirecting confirmed user to workspace');
       navigate('/workspace');
     }
-  }, [user, userProfile, authLoading, isAdmin, navigate, emailVerificationSuccess, urlChecked]);
+  }, [user, userProfile, authLoading, isAdmin, navigate, emailVerificationSuccess]);
 
   const handleBackToSignIn = () => {
     setEmailVerificationSuccess(false);
@@ -109,9 +101,9 @@ const Index = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Email Verified Successfully!</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Yes, you are successful!</h2>
               <p className="text-gray-600 mb-6">
-                Yes, you are successful! Your email has been confirmed and your account is now active. Please go to the sign in page to access your dashboard.
+                Your email has been confirmed and your account is now active. Please go to the sign in page to access your dashboard.
               </p>
               <button
                 onClick={handleBackToSignIn}

@@ -11,10 +11,9 @@ export function useAuthState() {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [initialized, setInitialized] = useState(false);
 
   const { fetchUserProfile, createUserProfile, isAdminEmail } = useUserProfileOperations();
-  const { getSessionWithRetry, handleConnectionError } = useSessionOperations();
+  const { handleConnectionError } = useSessionOperations();
   const { showWelcomeToast } = useAuthNotifications();
 
   const createMinimalProfile = (user: User): UserProfile => {
@@ -33,12 +32,6 @@ export function useAuthState() {
   };
 
   const handleUserProfile = async (user: User, showWelcome: boolean = false) => {
-    if (!user) {
-      setUserProfile(null);
-      setLoading(false);
-      return;
-    }
-
     console.log('Processing user profile for:', user.email);
     
     try {
@@ -75,26 +68,22 @@ export function useAuthState() {
       const minimalProfile = createMinimalProfile(user);
       setUserProfile(minimalProfile);
     }
-    
-    setLoading(false);
   };
 
   useEffect(() => {
     let mounted = true;
-
+    
     const initializeAuth = async () => {
-      if (initialized) return;
-
       try {
         console.log('Initializing authentication...');
         
+        // Get initial session
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('Session error:', error);
           if (mounted) {
             setLoading(false);
-            setInitialized(true);
           }
           return;
         }
@@ -108,35 +97,34 @@ export function useAuthState() {
           } else {
             setUser(null);
             setUserProfile(null);
-            setLoading(false);
           }
-          setInitialized(true);
+          setLoading(false);
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
         if (mounted) {
           setLoading(false);
-          setInitialized(true);
           handleConnectionError();
         }
       }
     };
 
-    if (!initialized) {
-      initializeAuth();
-    }
+    // Initialize auth
+    initializeAuth();
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted || !initialized) return;
+      if (!mounted) return;
       
       console.log('Auth state changed:', event, session?.user?.email || 'No session');
+      
+      // Always set loading to false after any auth state change
+      setLoading(false);
       
       // Handle different auth events
       if (event === 'SIGNED_OUT') {
         setUser(null);
         setUserProfile(null);
-        setLoading(false);
         return;
       }
       
@@ -151,12 +139,10 @@ export function useAuthState() {
         } else {
           // User not confirmed yet
           setUserProfile(null);
-          setLoading(false);
         }
       } else {
         setUser(null);
         setUserProfile(null);
-        setLoading(false);
       }
     });
 
@@ -164,7 +150,7 @@ export function useAuthState() {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [initialized]);
+  }, []);
 
   return {
     user,
