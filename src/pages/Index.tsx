@@ -20,40 +20,60 @@ const Index = () => {
       isAdmin
     });
     
-    // Check for email confirmation in URL - handle both hash and query parameters
+    // Check for email verification tokens in URL
     const checkEmailVerification = () => {
       const urlParams = new URLSearchParams(window.location.search);
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       
-      // Check both search params and hash params for verification tokens
+      // Check for any verification-related parameters
       const accessToken = urlParams.get('access_token') || hashParams.get('access_token');
       const refreshToken = urlParams.get('refresh_token') || hashParams.get('refresh_token');
       const type = urlParams.get('type') || hashParams.get('type');
       const tokenHash = urlParams.get('token_hash') || hashParams.get('token_hash');
+      const error = urlParams.get('error') || hashParams.get('error');
+      const errorDescription = urlParams.get('error_description') || hashParams.get('error_description');
       
-      console.log('URL verification check:', { accessToken: !!accessToken, refreshToken: !!refreshToken, type, tokenHash: !!tokenHash });
+      console.log('URL verification check:', { 
+        accessToken: !!accessToken, 
+        refreshToken: !!refreshToken, 
+        type, 
+        tokenHash: !!tokenHash,
+        error,
+        errorDescription
+      });
       
-      if ((accessToken && refreshToken) || (type === 'signup') || tokenHash) {
+      // If there's an error in the URL, don't show verification success
+      if (error) {
+        console.log('Error in verification URL:', error, errorDescription);
+        // Clean URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return false;
+      }
+      
+      // Check for verification tokens or confirmation type
+      if (accessToken || refreshToken || tokenHash || type === 'signup') {
         console.log('Email verification detected in URL parameters');
         setEmailVerificationSuccess(true);
         
-        // Clean URL - remove both search params and hash
-        const cleanUrl = window.location.pathname;
-        window.history.replaceState({}, document.title, cleanUrl);
+        // Clean URL - remove all params
+        window.history.replaceState({}, document.title, window.location.pathname);
         return true;
       }
+      
       return false;
     };
     
-    // Check for verification on load
-    const isVerification = checkEmailVerification();
-    
-    // If not verification and user is authenticated, redirect to workspace
-    if (!isVerification && !authLoading && user && userProfile && (user.email_confirmed_at || isAdmin)) {
-      console.log('Redirecting confirmed user to workspace');
-      navigate('/workspace');
+    // Only check for verification if not already shown and not loading
+    if (!emailVerificationSuccess && !authLoading) {
+      const isVerification = checkEmailVerification();
+      
+      // If not verification and user is authenticated, redirect to workspace
+      if (!isVerification && user && userProfile && (user.email_confirmed_at || isAdmin)) {
+        console.log('Redirecting confirmed user to workspace');
+        navigate('/workspace');
+      }
     }
-  }, [user, userProfile, authLoading, isAdmin, navigate]);
+  }, [user, userProfile, authLoading, isAdmin, navigate, emailVerificationSuccess]);
 
   const handleBackToSignIn = () => {
     setEmailVerificationSuccess(false);
