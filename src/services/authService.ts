@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
@@ -11,6 +10,9 @@ export const signUpUser = async (
   console.log('Starting signup for:', email);
   
   try {
+    // Use the base URL for redirect to ensure it works in all environments
+    const redirectUrl = `${window.location.origin}/`;
+    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -19,7 +21,7 @@ export const signUpUser = async (
           full_name: fullName,
           referred_by: referralCode || null
         },
-        emailRedirectTo: `${window.location.origin}/`
+        emailRedirectTo: redirectUrl
       }
     });
 
@@ -50,7 +52,7 @@ export const signUpUser = async (
       console.log('Email confirmation required for:', email);
       toast({
         title: "Registration Successful!",
-        description: "Please check your email and click the verification link to activate your account. After verification, return here to sign in.",
+        description: "Please check your email and click the verification link to activate your account. After verification, you'll see a success message and can sign in.",
         duration: 10000,
       });
     } else if (data.user && data.session) {

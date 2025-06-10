@@ -20,22 +20,36 @@ const Index = () => {
       isAdmin
     });
     
-    // Check for email confirmation in URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const accessToken = urlParams.get('access_token');
-    const refreshToken = urlParams.get('refresh_token');
-    const type = urlParams.get('type');
+    // Check for email confirmation in URL - handle both hash and query parameters
+    const checkEmailVerification = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      
+      // Check both search params and hash params for verification tokens
+      const accessToken = urlParams.get('access_token') || hashParams.get('access_token');
+      const refreshToken = urlParams.get('refresh_token') || hashParams.get('refresh_token');
+      const type = urlParams.get('type') || hashParams.get('type');
+      const tokenHash = urlParams.get('token_hash') || hashParams.get('token_hash');
+      
+      console.log('URL verification check:', { accessToken: !!accessToken, refreshToken: !!refreshToken, type, tokenHash: !!tokenHash });
+      
+      if ((accessToken && refreshToken) || (type === 'signup') || tokenHash) {
+        console.log('Email verification detected in URL parameters');
+        setEmailVerificationSuccess(true);
+        
+        // Clean URL - remove both search params and hash
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+        return true;
+      }
+      return false;
+    };
     
-    if (accessToken && refreshToken && type === 'signup') {
-      console.log('Email verification detected in URL parameters');
-      setEmailVerificationSuccess(true);
-      // Clean URL
-      window.history.replaceState({}, document.title, window.location.pathname);
-      return;
-    }
+    // Check for verification on load
+    const isVerification = checkEmailVerification();
     
-    // Redirect authenticated and confirmed users to workspace
-    if (!authLoading && user && userProfile && (user.email_confirmed_at || isAdmin)) {
+    // If not verification and user is authenticated, redirect to workspace
+    if (!isVerification && !authLoading && user && userProfile && (user.email_confirmed_at || isAdmin)) {
       console.log('Redirecting confirmed user to workspace');
       navigate('/workspace');
     }
@@ -75,13 +89,13 @@ const Index = () => {
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Email Verified Successfully!</h2>
               <p className="text-gray-600 mb-6">
-                Your email has been confirmed and your account is now active. You can now sign in to access your dashboard.
+                Yes, you are successful! Your email has been confirmed and your account is now active. Please go to the sign in page to access your dashboard.
               </p>
               <button
                 onClick={handleBackToSignIn}
                 className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition-colors"
               >
-                Continue to Sign In
+                Go to Sign In Page
               </button>
             </div>
           </div>
