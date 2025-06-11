@@ -7,11 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { signInUser } from '@/services/authService';
+import { toast } from '@/hooks/use-toast';
 
 const SignIn = () => {
   const navigate = useNavigate();
-  const { signIn, loading } = useAuth();
+  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -28,11 +29,30 @@ const SignIn = () => {
       return;
     }
     
+    setLoading(true);
+    
     try {
-      await signIn(formData.email, formData.password);
+      console.log('Attempting sign in for:', formData.email);
+      await signInUser(formData.email, formData.password);
+      
+      toast({
+        title: "Success!",
+        description: "You have been signed in successfully.",
+      });
+      
+      // Navigate to workspace after successful sign in
       navigate('/workspace');
     } catch (error: any) {
+      console.error('Sign in error:', error);
       setError(error.message || 'Failed to sign in');
+      
+      toast({
+        title: "Sign In Failed",
+        description: error.message || "Please check your credentials and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -74,6 +94,7 @@ const SignIn = () => {
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
                 required
                 className="h-12"
+                disabled={loading}
               />
             </div>
             
@@ -88,6 +109,7 @@ const SignIn = () => {
                   onChange={(e) => setFormData({...formData, password: e.target.value})}
                   required
                   className="h-12 pr-10"
+                  disabled={loading}
                 />
                 <Button
                   type="button"
@@ -95,6 +117,7 @@ const SignIn = () => {
                   size="sm"
                   className="absolute right-0 top-0 h-12 px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
+                  disabled={loading}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4 text-gray-400" />
