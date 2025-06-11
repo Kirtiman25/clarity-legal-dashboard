@@ -7,11 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, AlertCircle, Mail } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { signUpUser } from '@/services/authService';
+import { toast } from '@/hooks/use-toast';
 
 const SignUp = () => {
   const navigate = useNavigate();
-  const { signUp, loading } = useAuth();
+  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
@@ -25,22 +26,42 @@ const SignUp = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
     
     if (!formData.email || !formData.password || !formData.fullName) {
       setError('Please fill in all required fields');
+      setLoading(false);
       return;
     }
     
     if (formData.password.length < 6) {
       setError('Password must be at least 6 characters long');
+      setLoading(false);
       return;
     }
     
     try {
-      await signUp(formData.email, formData.password, formData.fullName, formData.referralCode);
+      console.log('Starting signup for:', formData.email);
+      await signUpUser(formData.email, formData.password, formData.fullName, formData.referralCode);
+      
+      console.log('Signup successful, showing email confirmation');
       setShowEmailSent(true);
+      
+      toast({
+        title: "Account Created!",
+        description: "Please check your email to verify your account.",
+      });
     } catch (error: any) {
+      console.error('Signup error:', error);
       setError(error.message || 'Failed to create account');
+      
+      toast({
+        title: "Sign Up Failed",
+        description: error.message || "Failed to create account. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -120,6 +141,7 @@ const SignUp = () => {
                 onChange={(e) => setFormData({...formData, fullName: e.target.value})}
                 required
                 className="h-12"
+                disabled={loading}
               />
             </div>
             
@@ -133,6 +155,7 @@ const SignUp = () => {
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
                 required
                 className="h-12"
+                disabled={loading}
               />
             </div>
             
@@ -147,6 +170,7 @@ const SignUp = () => {
                   onChange={(e) => setFormData({...formData, password: e.target.value})}
                   required
                   className="h-12 pr-10"
+                  disabled={loading}
                 />
                 <Button
                   type="button"
@@ -154,6 +178,7 @@ const SignUp = () => {
                   size="sm"
                   className="absolute right-0 top-0 h-12 px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
+                  disabled={loading}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4 text-gray-400" />
@@ -173,6 +198,7 @@ const SignUp = () => {
                 value={formData.referralCode}
                 onChange={(e) => setFormData({...formData, referralCode: e.target.value})}
                 className="h-12"
+                disabled={loading}
               />
             </div>
             
