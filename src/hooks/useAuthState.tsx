@@ -109,9 +109,6 @@ export function useAuthState() {
       }
     };
 
-    // Initialize auth
-    initializeAuth();
-
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
@@ -146,6 +143,9 @@ export function useAuthState() {
       // Always set loading to false after processing
       setLoading(false);
     });
+
+    // Initialize auth
+    initializeAuth();
 
     return () => {
       mounted = false;

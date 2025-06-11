@@ -7,6 +7,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import SecurityHeaders from "@/components/SecurityHeaders";
 import Index from "./pages/Index";
+import SignIn from "./pages/SignIn";
+import SignUp from "./pages/SignUp";
+import VerificationSuccess from "./pages/VerificationSuccess";
 import Workspace from "./pages/Workspace";
 import Tasks from "./pages/Tasks";
 import AchieveEarn from "./pages/AchieveEarn";
@@ -31,6 +34,9 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/verification-success" element={<VerificationSuccess />} />
             <Route path="/workspace" element={<Workspace />} />
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/achieve-earn" element={<AchieveEarn />} />
