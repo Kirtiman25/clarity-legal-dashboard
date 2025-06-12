@@ -39,7 +39,8 @@ const SignIn = () => {
         description: "You have been signed in successfully.",
       });
       
-      // The auth state change will trigger navigation via the Index component
+      // Reset loading state - the auth state change will handle navigation
+      setLoading(false);
       
     } catch (error: any) {
       console.error('Sign in error:', error);
