@@ -8,34 +8,12 @@ import EmailConfirmationScreen from '@/components/auth/EmailConfirmationScreen';
 const Index = () => {
   const navigate = useNavigate();
   const { user, userProfile, loading: authLoading, isAdmin } = useAuth();
-  const [hasCheckedUrl, setHasCheckedUrl] = useState(false);
-  const [shouldRedirect, setShouldRedirect] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Handle URL checking for email verification
   useEffect(() => {
-    if (!authLoading && !hasCheckedUrl) {
-      const urlParams = new URLSearchParams(window.location.search);
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      
-      const accessToken = urlParams.get('access_token') || hashParams.get('access_token');
-      const type = urlParams.get('type') || hashParams.get('type');
-      const error = urlParams.get('error') || hashParams.get('error');
-      
-      console.log('URL check:', { accessToken: !!accessToken, type, error });
-      
-      if ((accessToken || type === 'signup') && !error) {
-        console.log('Email verification detected, setting redirect to verification success');
-        // Clean URL first
-        window.history.replaceState({}, document.title, window.location.pathname);
-        setShouldRedirect('/verification-success');
-      }
-      
-      setHasCheckedUrl(true);
-    }
-  }, [authLoading, hasCheckedUrl]);
+    // Only run once when auth loading is complete
+    if (authLoading || isInitialized) return;
 
-  // Handle auth-based redirects
-  useEffect(() => {
     console.log('Index page - Auth state:', { 
       user: user?.email, 
       userProfile: !!userProfile, 
@@ -44,43 +22,62 @@ const Index = () => {
       isAdmin
     });
 
-    if (!authLoading && hasCheckedUrl && !shouldRedirect) {
-      // Navigate confirmed users to workspace
-      if (user && userProfile && (user.email_confirmed_at || isAdmin)) {
-        console.log('Setting redirect to workspace for confirmed user');
-        setShouldRedirect('/workspace');
-      }
-      // Redirect to signup for new users
-      else if (!user) {
-        console.log('Setting redirect to signup for new users');
-        setShouldRedirect('/signup');
-      }
+    // Check for email verification in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    
+    const accessToken = urlParams.get('access_token') || hashParams.get('access_token');
+    const type = urlParams.get('type') || hashParams.get('type');
+    const error = urlParams.get('error') || hashParams.get('error');
+    
+    console.log('URL check:', { accessToken: !!accessToken, type, error });
+    
+    // Handle email verification redirect
+    if ((accessToken || type === 'signup') && !error) {
+      console.log('Email verification detected, redirecting to verification success');
+      // Clean URL first
+      window.history.replaceState({}, document.title, window.location.pathname);
+      navigate('/verification-success');
+      setIsInitialized(true);
+      return;
     }
-  }, [user, userProfile, authLoading, isAdmin, hasCheckedUrl, shouldRedirect]);
 
-  // Handle the actual navigation
-  useEffect(() => {
-    if (shouldRedirect) {
-      console.log('Redirecting to:', shouldRedirect);
-      navigate(shouldRedirect);
+    // Handle authenticated users
+    if (user && userProfile && (user.email_confirmed_at || isAdmin)) {
+      console.log('Redirecting confirmed user to workspace');
+      navigate('/workspace');
+      setIsInitialized(true);
+      return;
     }
-  }, [shouldRedirect, navigate]);
 
-  // Show loading during auth initialization or while checking URL
-  if (authLoading || !hasCheckedUrl) {
+    // Handle unauthenticated users
+    if (!user) {
+      console.log('Redirecting to signup for new users');
+      navigate('/signup');
+      setIsInitialized(true);
+      return;
+    }
+
+    // If we reach here, user exists but email not confirmed (will show EmailConfirmationScreen)
+    setIsInitialized(true);
+  }, [authLoading, user, userProfile, isAdmin, navigate, isInitialized]);
+
+  // Show loading during auth initialization
+  if (authLoading || !isInitialized) {
     return <LoadingScreen />;
   }
 
   // Show email confirmation screen for unverified users
-  if (user && !user.email_confirmed_at && !isAdmin && !shouldRedirect) {
+  if (user && !user.email_confirmed_at && !isAdmin) {
     return (
       <EmailConfirmationScreen 
         userEmail={user.email || ''} 
-        onBackToSignIn={() => setShouldRedirect('/signin')}
+        onBackToSignIn={() => navigate('/signin')}
       />
     );
   }
 
+  // Fallback loading (shouldn't reach here normally)
   return <LoadingScreen />;
 };
 
