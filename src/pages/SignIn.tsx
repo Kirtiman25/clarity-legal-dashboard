@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +11,6 @@ import { signInUser } from '@/services/authService';
 import { toast } from '@/hooks/use-toast';
 
 const SignIn = () => {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -40,8 +39,9 @@ const SignIn = () => {
         description: "You have been signed in successfully.",
       });
       
-      // Navigate to workspace after successful sign in
-      navigate('/workspace');
+      // Don't navigate manually - let the auth state change handle it
+      // The Index component will detect the auth state change and redirect appropriately
+      
     } catch (error: any) {
       console.error('Sign in error:', error);
       setError(error.message || 'Failed to sign in');
@@ -51,7 +51,6 @@ const SignIn = () => {
         description: error.message || "Please check your credentials and try again.",
         variant: "destructive",
       });
-    } finally {
       setLoading(false);
     }
   };
