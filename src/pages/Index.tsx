@@ -11,8 +11,8 @@ const Index = () => {
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    // Only run once when auth loading is complete
-    if (authLoading || isInitialized) return;
+    // Only run when auth loading is complete
+    if (authLoading) return;
 
     console.log('Index page - Auth state:', { 
       user: user?.email, 
@@ -42,10 +42,17 @@ const Index = () => {
       return;
     }
 
-    // Handle authenticated users
+    // Handle authenticated users with confirmed email or admin status
     if (user && userProfile && (user.email_confirmed_at || isAdmin)) {
       console.log('Redirecting confirmed user to workspace');
       navigate('/workspace');
+      setIsInitialized(true);
+      return;
+    }
+
+    // Handle authenticated users without confirmed email (not admin)
+    if (user && !user.email_confirmed_at && !isAdmin) {
+      console.log('User email not confirmed, showing confirmation screen');
       setIsInitialized(true);
       return;
     }
@@ -58,9 +65,9 @@ const Index = () => {
       return;
     }
 
-    // If we reach here, user exists but email not confirmed (will show EmailConfirmationScreen)
+    // Fallback
     setIsInitialized(true);
-  }, [authLoading, user, userProfile, isAdmin, navigate, isInitialized]);
+  }, [authLoading, user, userProfile, isAdmin, navigate]);
 
   // Show loading during auth initialization
   if (authLoading || !isInitialized) {
