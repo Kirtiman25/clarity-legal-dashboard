@@ -42,11 +42,27 @@ const Index = () => {
       return;
     }
 
-    // Handle authenticated users with confirmed email or admin status
-    if (user && userProfile && (user.email_confirmed_at || isAdmin)) {
-      console.log('Redirecting confirmed user to workspace');
+    // Handle authenticated users - check for user AND userProfile
+    if (user && userProfile) {
+      console.log('User authenticated with profile, redirecting to workspace');
       navigate('/workspace');
       setIsInitialized(true);
+      return;
+    }
+
+    // Handle authenticated users without userProfile but with confirmed email or admin
+    if (user && (user.email_confirmed_at || isAdmin)) {
+      console.log('User authenticated, waiting for profile creation...');
+      // Give some time for profile creation, then redirect
+      setTimeout(() => {
+        if (userProfile) {
+          navigate('/workspace');
+        } else {
+          console.log('Profile not created, redirecting to workspace anyway');
+          navigate('/workspace');
+        }
+        setIsInitialized(true);
+      }, 1500);
       return;
     }
 
@@ -59,7 +75,7 @@ const Index = () => {
 
     // Handle unauthenticated users
     if (!user) {
-      console.log('Redirecting to signup for new users');
+      console.log('No user found, redirecting to signup');
       navigate('/signup');
       setIsInitialized(true);
       return;

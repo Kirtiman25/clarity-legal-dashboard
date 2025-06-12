@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import { signInUser } from '@/services/authService';
 import { toast } from '@/hooks/use-toast';
 
 const SignIn = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -32,15 +33,18 @@ const SignIn = () => {
     
     try {
       console.log('Attempting sign in for:', formData.email);
-      await signInUser(formData.email, formData.password);
+      const result = await signInUser(formData.email, formData.password);
       
-      toast({
-        title: "Success!",
-        description: "You have been signed in successfully.",
-      });
-      
-      // Reset loading state - the auth state change will handle navigation
-      setLoading(false);
+      if (result.user) {
+        toast({
+          title: "Success!",
+          description: "You have been signed in successfully.",
+        });
+        
+        // Navigate directly to workspace after successful sign-in
+        console.log('Sign in successful, navigating to workspace');
+        navigate('/workspace');
+      }
       
     } catch (error: any) {
       console.error('Sign in error:', error);
@@ -51,6 +55,7 @@ const SignIn = () => {
         description: error.message || "Please check your credentials and try again.",
         variant: "destructive",
       });
+    } finally {
       setLoading(false);
     }
   };
