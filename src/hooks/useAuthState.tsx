@@ -11,6 +11,7 @@ export function useAuthState() {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
 
   const { fetchUserProfile, createUserProfile, isAdminEmail } = useUserProfileOperations();
   const { handleConnectionError } = useSessionOperations();
@@ -41,11 +42,22 @@ export function useAuthState() {
       if (user.email_confirmed_at || isAdmin) {
         console.log('User email confirmed or admin, processing profile...');
         
-        let profile: UserProfile | null = await fetchUserProfile(user.id);
+        let profile: UserProfile | null = null;
+        
+        try {
+          profile = await fetchUserProfile(user.id);
+        } catch (error) {
+          console.log('Error fetching profile, will create minimal profile:', error);
+        }
         
         if (!profile) {
-          console.log('No profile found, creating new one...');
-          profile = await createUserProfile(user);
+          console.log('No profile found, attempting to create one...');
+          try {
+            profile = await createUserProfile(user);
+          } catch (error) {
+            console.log('Error creating profile, using minimal profile:', error);
+            profile = createMinimalProfile(user);
+          }
         }
         
         if (!profile) {
@@ -83,7 +95,10 @@ export function useAuthState() {
         if (error) {
           console.error('Session error:', error);
           if (mounted) {
+            setUser(null);
+            setUserProfile(null);
             setLoading(false);
+            setInitialized(true);
           }
           return;
         }
@@ -93,17 +108,27 @@ export function useAuthState() {
         if (mounted) {
           if (session?.user) {
             setUser(session.user);
-            await handleUserProfile(session.user);
+            // Don't await this to avoid blocking loading state
+            handleUserProfile(session.user).finally(() => {
+              if (mounted) {
+                setLoading(false);
+                setInitialized(true);
+              }
+            });
           } else {
             setUser(null);
             setUserProfile(null);
+            setLoading(false);
+            setInitialized(true);
           }
-          setLoading(false);
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
         if (mounted) {
+          setUser(null);
+          setUserProfile(null);
           setLoading(false);
+          setInitialized(true);
           handleConnectionError();
         }
       }
@@ -128,20 +153,25 @@ export function useAuthState() {
         
         // Handle sign in or token refresh with confirmed email
         if (event === 'SIGNED_IN' || (event === 'TOKEN_REFRESHED' && session.user.email_confirmed_at)) {
-          await handleUserProfile(session.user, event === 'SIGNED_IN');
+          // Don't await to avoid blocking
+          handleUserProfile(session.user, event === 'SIGNED_IN').finally(() => {
+            if (mounted) setLoading(false);
+          });
         } else if (session.user.email_confirmed_at || isAdminEmail(session.user.email || '')) {
-          await handleUserProfile(session.user);
+          // Don't await to avoid blocking
+          handleUserProfile(session.user).finally(() => {
+            if (mounted) setLoading(false);
+          });
         } else {
           // User not confirmed yet
           setUserProfile(null);
+          setLoading(false);
         }
       } else {
         setUser(null);
         setUserProfile(null);
+        setLoading(false);
       }
-      
-      // Always set loading to false after processing
-      setLoading(false);
     });
 
     // Initialize auth
@@ -152,6 +182,19 @@ export function useAuthState() {
       subscription.unsubscribe();
     };
   }, []);
+
+  // Failsafe: if auth hasn't initialized within 10 seconds, stop loading
+  useEffect(() => {
+    const failsafe = setTimeout(() => {
+      if (!initialized) {
+        console.log('Auth initialization failsafe triggered');
+        setLoading(false);
+        setInitialized(true);
+      }
+    }, 10000);
+
+    return () => clearTimeout(failsafe);
+  }, [initialized]);
 
   return {
     user,
