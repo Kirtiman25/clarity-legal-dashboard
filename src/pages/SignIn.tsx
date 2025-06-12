@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -41,6 +40,7 @@ const SignIn = () => {
       
       // Don't navigate manually - let the auth state change handle it
       // The Index component will detect the auth state change and redirect appropriately
+      // Don't set loading to false here - let the auth state change handle it
       
     } catch (error: any) {
       console.error('Sign in error:', error);
