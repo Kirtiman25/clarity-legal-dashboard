@@ -23,13 +23,13 @@ const SignIn = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
     
     if (!formData.email || !formData.password) {
       setError('Please fill in all fields');
+      setLoading(false);
       return;
     }
-    
-    setLoading(true);
     
     try {
       console.log('Attempting sign in for:', formData.email);
