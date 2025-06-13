@@ -60,7 +60,11 @@ export function useAuthState() {
             console.log('Session found for user:', session.user.email);
             setUser(session.user);
             
-            // Process profile with better error handling
+            // Don't block the UI for profile loading - set loading to false first
+            setLoading(false);
+            setInitialized(true);
+            
+            // Process profile in background
             try {
               const profile = await handleUserProfile(session.user);
               if (mounted) {
@@ -69,7 +73,7 @@ export function useAuthState() {
               }
             } catch (error) {
               console.error('Profile processing error:', error);
-              // Don't fail the whole auth process if profile fails
+              // Profile failure doesn't prevent app usage
               if (mounted) {
                 setUserProfile(null);
               }
@@ -78,12 +82,9 @@ export function useAuthState() {
             console.log('No session found');
             setUser(null);
             setUserProfile(null);
+            setLoading(false);
+            setInitialized(true);
           }
-          
-          // Always clear loading and mark as initialized
-          setLoading(false);
-          setInitialized(true);
-          console.log('Auth initialization completed');
         }
       } catch (error) {
         console.error('Auth initialization error:', error);

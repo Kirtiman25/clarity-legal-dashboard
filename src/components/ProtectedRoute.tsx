@@ -14,28 +14,13 @@ const ProtectedRoute = ({ children, requirePaid = false }: ProtectedRouteProps) 
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Only redirect if loading is complete
-    if (!loading) {
-      if (!user) {
-        console.log('ProtectedRoute: No user found, redirecting to signin');
-        navigate('/signin');
-        return;
-      }
-      
-      // Allow admin users (specific email) to proceed without profile
-      const isAdminUser = user.email === 'uttamkumar30369@gmail.com';
-      
-      // For non-admin users, we need a profile but don't wait too long
-      if (!userProfile && !isAdminUser) {
-        console.log('ProtectedRoute: No user profile found for non-admin user');
-        // Don't redirect immediately, give some time for profile to load
-        // but don't wait indefinitely
-        return;
-      }
-      
-      console.log('ProtectedRoute: User authorized, rendering content');
+    // Only redirect if loading is complete and no user
+    if (!loading && !user) {
+      console.log('ProtectedRoute: No user found, redirecting to signin');
+      navigate('/signin');
+      return;
     }
-  }, [user, userProfile, loading, navigate]);
+  }, [user, loading, navigate]);
 
   // Show loading while auth is initializing
   if (loading) {
@@ -52,13 +37,7 @@ const ProtectedRoute = ({ children, requirePaid = false }: ProtectedRouteProps) 
   // Allow admin user to proceed without profile
   const isAdminUser = user.email === 'uttamkumar30369@gmail.com';
   
-  // For non-admin users, show loading if no profile yet
-  if (!userProfile && !isAdminUser) {
-    console.log('ProtectedRoute: Waiting for user profile to load');
-    return <LoadingScreen />;
-  }
-
-  console.log('ProtectedRoute: Rendering protected content');
+  console.log('ProtectedRoute: User authorized, rendering content');
   return <>{children}</>;
 };
 
