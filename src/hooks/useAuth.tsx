@@ -74,8 +74,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Always provide a valid context value
-  const value: AuthContextType = {
+  // Always provide a valid context value - this is the fix
+  const contextValue: AuthContextType = {
     user: user || null,
     userProfile: userProfile || null,
     loading,
@@ -85,23 +85,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signOut,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    // Instead of throwing an error immediately, return a default context
-    console.warn('useAuth called outside of AuthProvider, returning default values');
-    return {
-      user: null,
-      userProfile: null,
-      loading: true,
-      isAdmin: false,
-      signUp: async () => { throw new Error('AuthProvider not found'); },
-      signIn: async () => { throw new Error('AuthProvider not found'); },
-      signOut: async () => { throw new Error('AuthProvider not found'); },
-    };
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 }
