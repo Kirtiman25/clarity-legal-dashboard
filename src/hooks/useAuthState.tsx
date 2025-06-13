@@ -1,5 +1,6 @@
 
 import { useEffect } from 'react';
+import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useSessionOperations } from './useSessionOperations';
 import { useAuthInitialization } from './useAuthInitialization';
@@ -53,11 +54,11 @@ export function useAuthState() {
 
         // Get initial session with timeout
         const sessionPromise = initializeAuth();
-        const timeoutPromise = new Promise((resolve) => 
+        const timeoutPromise = new Promise<Session | null>((resolve) => 
           setTimeout(() => resolve(null), 3000)
         );
         
-        const session = await Promise.race([sessionPromise, timeoutPromise]);
+        const session = await Promise.race([sessionPromise, timeoutPromise]) as Session | null;
         
         if (mounted) {
           if (session?.user) {
