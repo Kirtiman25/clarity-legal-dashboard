@@ -24,9 +24,16 @@ const ProtectedRoute = ({ children, requirePaid = false }: ProtectedRouteProps) 
       
       // For admin users, allow access even without profile
       if (user && !userProfile && user.email !== 'uttamkumar30369@gmail.com') {
-        console.log('ProtectedRoute: No user profile found for non-admin, redirecting to signin');
-        navigate('/signin');
-        return;
+        console.log('ProtectedRoute: No user profile found for non-admin, waiting...');
+        // Don't redirect immediately, wait a bit for profile to load
+        const timeoutId = setTimeout(() => {
+          if (!userProfile) {
+            console.log('ProtectedRoute: Profile load timeout, redirecting to signin');
+            navigate('/signin');
+          }
+        }, 2000);
+        
+        return () => clearTimeout(timeoutId);
       }
     }
   }, [user, userProfile, loading, navigate]);
@@ -41,7 +48,7 @@ const ProtectedRoute = ({ children, requirePaid = false }: ProtectedRouteProps) 
     return <LoadingScreen />;
   }
 
-  // For admin, allow access even without profile
+  // For non-admin users, wait for profile to load
   if (!userProfile && user.email !== 'uttamkumar30369@gmail.com') {
     return <LoadingScreen />;
   }

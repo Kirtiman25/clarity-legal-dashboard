@@ -41,31 +41,24 @@ export function useAuthEventHandler({
       
       // Handle sign in - show welcome toast and process profile
       if (event === 'SIGNED_IN') {
-        console.log('User signed in, processing profile and finalizing auth...');
+        console.log('User signed in, processing profile...');
         showWelcomeToast();
         
-        // Process profile asynchronously but don't block the UI
-        const processProfile = async () => {
-          try {
-            const profile = await handleUserProfile(session.user, false);
-            if (profile && mounted) {
-              setUserProfile(profile);
-            }
-          } catch (error) {
-            console.error('Error processing profile after sign in:', error);
-            // Don't block auth flow for profile errors
-          } finally {
-            if (mounted) {
-              setLoading(false);
-            }
-          }
-        };
+        // Set loading to false immediately to show UI
+        setLoading(false);
         
-        // Start profile processing but don't wait for it
-        processProfile();
+        // Process profile in background
+        try {
+          const profile = await handleUserProfile(session.user, false);
+          if (profile && mounted) {
+            setUserProfile(profile);
+          }
+        } catch (error) {
+          console.error('Error processing profile after sign in:', error);
+        }
         
       } else if (event === 'TOKEN_REFRESHED') {
-        // Handle token refresh without showing welcome toast
+        // Handle token refresh
         console.log('Token refreshed, checking profile...');
         
         if (session.user.email_confirmed_at || isAdminEmail(session.user.email || '')) {
@@ -79,7 +72,8 @@ export function useAuthEventHandler({
           }
         }
         
-        if (mounted) setLoading(false);
+        // Always set loading to false for token refresh
+        setLoading(false);
       } else {
         // Initial session or other events
         if (session.user.email_confirmed_at || isAdminEmail(session.user.email || '')) {
@@ -98,7 +92,8 @@ export function useAuthEventHandler({
           setUserProfile(null);
         }
         
-        if (mounted) setLoading(false);
+        // Set loading to false
+        setLoading(false);
       }
     } else {
       console.log('No user in session');

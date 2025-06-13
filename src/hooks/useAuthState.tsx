@@ -51,38 +51,36 @@ export function useAuthState() {
         });
         subscription = data.subscription;
 
-        // Then get initial session
-        const session = await initializeAuth();
+        // Get initial session with timeout
+        const sessionPromise = initializeAuth();
+        const timeoutPromise = new Promise((resolve) => 
+          setTimeout(() => resolve(null), 3000)
+        );
+        
+        const session = await Promise.race([sessionPromise, timeoutPromise]);
         
         if (mounted) {
           if (session?.user) {
             console.log('Session found for user:', session.user.email);
             setUser(session.user);
             
-            // Process profile with timeout to prevent blocking
-            setTimeout(async () => {
-              if (mounted) {
-                try {
-                  const profile = await handleUserProfile(session.user);
-                  if (profile && mounted) {
-                    setUserProfile(profile);
-                  }
-                } catch (error) {
-                  console.error('Profile processing error:', error);
-                }
-                if (mounted) {
-                  setLoading(false);
-                  setInitialized(true);
-                }
+            // Process profile quickly
+            try {
+              const profile = await handleUserProfile(session.user);
+              if (profile && mounted) {
+                setUserProfile(profile);
               }
-            }, 100);
+            } catch (error) {
+              console.error('Profile processing error:', error);
+            }
           } else {
             console.log('No session found');
             setUser(null);
             setUserProfile(null);
-            setLoading(false);
-            setInitialized(true);
           }
+          
+          setLoading(false);
+          setInitialized(true);
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
@@ -96,10 +94,8 @@ export function useAuthState() {
       }
     };
 
-    // Only initialize once
-    if (!initialized) {
-      initializeAuthState();
-    }
+    // Initialize immediately
+    initializeAuthState();
 
     return () => {
       mounted = false;
@@ -107,7 +103,7 @@ export function useAuthState() {
         subscription.unsubscribe();
       }
     };
-  }, [initialized]); // Only depend on initialized to prevent re-initialization
+  }, []); // Remove initialized dependency to prevent re-initialization
 
   return {
     user,
