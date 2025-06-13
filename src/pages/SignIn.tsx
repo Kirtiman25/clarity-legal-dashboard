@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,6 @@ import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const SignIn = () => {
-  const navigate = useNavigate();
   const { signIn, loading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -35,8 +34,8 @@ const SignIn = () => {
       console.log('SignIn: Attempting sign in for:', formData.email);
       await signIn(formData.email, formData.password);
       
-      console.log('SignIn: Sign in successful, navigating to workspace');
-      navigate('/workspace');
+      console.log('SignIn: Sign in successful, letting Index handle navigation');
+      // Don't navigate manually - let the Index component handle the redirect
       
     } catch (error: any) {
       console.error('SignIn: Sign in error:', error);

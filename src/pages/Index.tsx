@@ -42,17 +42,17 @@ const Index = () => {
       return;
     }
 
-    // Handle authenticated users - check for user AND userProfile
-    if (user && userProfile) {
-      console.log('User authenticated with profile, redirecting to workspace');
+    // Handle authenticated users - prioritize workspace redirect
+    if (user && (user.email_confirmed_at || isAdmin)) {
+      console.log('User authenticated and confirmed, redirecting to workspace');
       navigate('/workspace');
       setIsInitialized(true);
       return;
     }
 
-    // Handle authenticated users without userProfile but with confirmed email or admin
-    if (user && (user.email_confirmed_at || isAdmin)) {
-      console.log('User authenticated but no profile, redirecting to workspace');
+    // Handle authenticated users with profile but unconfirmed email (admin bypass)
+    if (user && userProfile && isAdmin) {
+      console.log('Admin user with profile, redirecting to workspace');
       navigate('/workspace');
       setIsInitialized(true);
       return;
@@ -75,7 +75,7 @@ const Index = () => {
 
     // Fallback
     setIsInitialized(true);
-  }, [authLoading, user, userProfile, isAdmin, navigate]); // Fixed dependencies
+  }, [authLoading, user, userProfile, isAdmin, navigate]);
 
   // Show loading during auth initialization
   if (authLoading || !isInitialized) {

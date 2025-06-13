@@ -39,13 +39,13 @@ export function useAuthEventHandler({
       console.log('Setting user from session:', session.user.email);
       setUser(session.user);
       
-      // Handle sign in or token refresh with confirmed email
+      // Handle sign in - show welcome toast immediately
       if (event === 'SIGNED_IN') {
-        console.log('User signed in, processing profile...');
-        const profile = await handleUserProfile(session.user, true);
+        console.log('User signed in, showing welcome toast and processing profile...');
+        showWelcomeToast();
+        const profile = await handleUserProfile(session.user, false); // Don't duplicate welcome toast
         if (profile) {
           setUserProfile(profile);
-          showWelcomeToast();
         }
         if (mounted) setLoading(false);
       } else if (event === 'TOKEN_REFRESHED' && session.user.email_confirmed_at) {
