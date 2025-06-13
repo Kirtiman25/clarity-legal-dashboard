@@ -5,7 +5,7 @@ import { signUpUser, signInUser, signOutUser } from '@/services/authService';
 import { toast } from '@/hooks/use-toast';
 import type { AuthContextType } from '@/types/auth';
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { user, userProfile, loading, setLoading } = useAuthState();
@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Always provide a valid context value - this is the fix
+  // Always provide a valid context value with proper defaults
   const contextValue: AuthContextType = {
     user: user || null,
     userProfile: userProfile || null,
@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
