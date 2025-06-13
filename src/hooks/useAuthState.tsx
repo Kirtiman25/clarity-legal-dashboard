@@ -52,27 +52,27 @@ export function useAuthState() {
         });
         subscription = data.subscription;
 
-        // Get initial session with timeout
-        const sessionPromise = initializeAuth();
-        const timeoutPromise = new Promise<Session | null>((resolve) => 
-          setTimeout(() => resolve(null), 3000)
-        );
-        
-        const session = await Promise.race([sessionPromise, timeoutPromise]) as Session | null;
+        // Get initial session
+        const session = await initializeAuth();
         
         if (mounted) {
           if (session?.user) {
             console.log('Session found for user:', session.user.email);
             setUser(session.user);
             
-            // Process profile quickly
+            // Process profile with better error handling
             try {
               const profile = await handleUserProfile(session.user);
-              if (profile && mounted) {
+              if (mounted) {
                 setUserProfile(profile);
+                console.log('Profile loaded successfully:', profile?.email);
               }
             } catch (error) {
               console.error('Profile processing error:', error);
+              // Don't fail the whole auth process if profile fails
+              if (mounted) {
+                setUserProfile(null);
+              }
             }
           } else {
             console.log('No session found');
@@ -80,8 +80,10 @@ export function useAuthState() {
             setUserProfile(null);
           }
           
+          // Always clear loading and mark as initialized
           setLoading(false);
           setInitialized(true);
+          console.log('Auth initialization completed');
         }
       } catch (error) {
         console.error('Auth initialization error:', error);

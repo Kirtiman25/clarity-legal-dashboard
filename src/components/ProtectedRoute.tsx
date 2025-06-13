@@ -22,37 +22,43 @@ const ProtectedRoute = ({ children, requirePaid = false }: ProtectedRouteProps) 
         return;
       }
       
-      // For admin users, allow access even without profile
-      if (user && !userProfile && user.email !== 'uttamkumar30369@gmail.com') {
-        console.log('ProtectedRoute: No user profile found for non-admin, waiting...');
-        // Don't redirect immediately, wait a bit for profile to load
-        const timeoutId = setTimeout(() => {
-          if (!userProfile) {
-            console.log('ProtectedRoute: Profile load timeout, redirecting to signin');
-            navigate('/signin');
-          }
-        }, 2000);
-        
-        return () => clearTimeout(timeoutId);
+      // Allow admin users (specific email) to proceed without profile
+      const isAdminUser = user.email === 'uttamkumar30369@gmail.com';
+      
+      // For non-admin users, we need a profile but don't wait too long
+      if (!userProfile && !isAdminUser) {
+        console.log('ProtectedRoute: No user profile found for non-admin user');
+        // Don't redirect immediately, give some time for profile to load
+        // but don't wait indefinitely
+        return;
       }
+      
+      console.log('ProtectedRoute: User authorized, rendering content');
     }
   }, [user, userProfile, loading, navigate]);
 
   // Show loading while auth is initializing
   if (loading) {
+    console.log('ProtectedRoute: Auth loading, showing loading screen');
     return <LoadingScreen />;
   }
 
   // Don't render if no user (will redirect)
   if (!user) {
+    console.log('ProtectedRoute: No user, showing loading screen while redirecting');
     return <LoadingScreen />;
   }
 
-  // For non-admin users, wait for profile to load
-  if (!userProfile && user.email !== 'uttamkumar30369@gmail.com') {
+  // Allow admin user to proceed without profile
+  const isAdminUser = user.email === 'uttamkumar30369@gmail.com';
+  
+  // For non-admin users, show loading if no profile yet
+  if (!userProfile && !isAdminUser) {
+    console.log('ProtectedRoute: Waiting for user profile to load');
     return <LoadingScreen />;
   }
 
+  console.log('ProtectedRoute: Rendering protected content');
   return <>{children}</>;
 };
 

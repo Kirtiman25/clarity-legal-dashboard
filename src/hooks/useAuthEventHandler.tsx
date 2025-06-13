@@ -44,21 +44,26 @@ export function useAuthEventHandler({
         console.log('User signed in, processing profile...');
         showWelcomeToast();
         
-        // Set loading to false immediately to show UI
-        setLoading(false);
-        
-        // Process profile in background
-        try {
-          const profile = await handleUserProfile(session.user, false);
-          if (profile && mounted) {
-            setUserProfile(profile);
+        // Process profile for confirmed users or admins
+        if (session.user.email_confirmed_at || isAdminEmail(session.user.email || '')) {
+          try {
+            const profile = await handleUserProfile(session.user, false);
+            if (profile && mounted) {
+              setUserProfile(profile);
+              console.log('Profile set after sign in:', profile.email);
+            }
+          } catch (error) {
+            console.error('Error processing profile after sign in:', error);
+            // Don't fail auth if profile fails
+            setUserProfile(null);
           }
-        } catch (error) {
-          console.error('Error processing profile after sign in:', error);
         }
         
+        // Always clear loading after sign in
+        setLoading(false);
+        
       } else if (event === 'TOKEN_REFRESHED') {
-        // Handle token refresh
+        // Handle token refresh - don't change loading state
         console.log('Token refreshed, checking profile...');
         
         if (session.user.email_confirmed_at || isAdminEmail(session.user.email || '')) {
@@ -71,9 +76,6 @@ export function useAuthEventHandler({
             console.error('Error processing profile after token refresh:', error);
           }
         }
-        
-        // Always set loading to false for token refresh
-        setLoading(false);
       } else {
         // Initial session or other events
         if (session.user.email_confirmed_at || isAdminEmail(session.user.email || '')) {
@@ -83,16 +85,18 @@ export function useAuthEventHandler({
             const profile = await handleUserProfile(session.user, false);
             if (profile && mounted) {
               setUserProfile(profile);
+              console.log('Profile set for initial session:', profile.email);
             }
           } catch (error) {
             console.error('Error processing profile:', error);
+            setUserProfile(null);
           }
         } else {
           console.log('User email not confirmed yet');
           setUserProfile(null);
         }
         
-        // Set loading to false
+        // Clear loading for initial session
         setLoading(false);
       }
     } else {

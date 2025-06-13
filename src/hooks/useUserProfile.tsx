@@ -6,7 +6,7 @@ import type { User } from '@supabase/supabase-js';
 
 export const useUserProfileOperations = () => {
   const isAdminEmail = (email: string) => {
-    return email === 'clarcatalyst123@gmail.com';
+    return email === 'uttamkumar30369@gmail.com';
   };
 
   const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
@@ -21,11 +21,11 @@ export const useUserProfileOperations = () => {
 
       if (error) {
         if (error.code === 'PGRST116') {
-          console.log('No user profile found, this is normal for new users');
+          console.log('No user profile found in database');
           return null;
         }
         console.error('Error fetching user profile:', error);
-        return null;
+        throw error; // Throw to handle upstream
       }
 
       console.log('Successfully fetched user profile:', data);
@@ -46,21 +46,21 @@ export const useUserProfileOperations = () => {
             
           if (updateError) {
             console.error('Error updating admin role:', updateError);
-            return data;
+            return data; // Return original data if update fails
           }
           
           console.log('Successfully updated admin role:', updatedData);
           return updatedData;
         } catch (updateError) {
           console.error('Exception updating admin role:', updateError);
-          return data;
+          return data; // Return original data if update fails
         }
       }
       
       return data;
     } catch (error) {
       console.error('Exception in fetchUserProfile:', error);
-      return null;
+      throw error; // Re-throw to handle upstream
     }
   };
 
@@ -103,7 +103,7 @@ export const useUserProfileOperations = () => {
           return await fetchUserProfile(user.id);
         }
         
-        return null;
+        throw error; // Re-throw other errors
       }
 
       console.log('Successfully created user profile:', data);
@@ -120,7 +120,7 @@ export const useUserProfileOperations = () => {
       return data;
     } catch (error) {
       console.error('Exception in createUserProfile:', error);
-      return null;
+      throw error; // Re-throw to handle upstream
     }
   };
 
