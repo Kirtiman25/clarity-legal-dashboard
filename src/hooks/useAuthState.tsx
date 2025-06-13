@@ -1,17 +1,23 @@
 
-import { useState, useEffect } from 'react';
-import { User } from '@supabase/supabase-js';
+import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { UserProfile } from '@/types/auth';
 import { useSessionOperations } from './useSessionOperations';
 import { useAuthInitialization } from './useAuthInitialization';
 import { useAuthEventHandler } from './useAuthEventHandler';
+import { useAuthStateManager } from './useAuthStateManager';
+import { useAuthFailsafe } from './useAuthFailsafe';
 
 export function useAuthState() {
-  const [user, setUser] = useState<User | null>(null);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [initialized, setInitialized] = useState(false);
+  const {
+    user,
+    userProfile,
+    loading,
+    initialized,
+    setUser,
+    setUserProfile,
+    setLoading,
+    setInitialized
+  } = useAuthStateManager();
 
   const { handleConnectionError } = useSessionOperations();
   const { handleUserProfile, initializeAuth } = useAuthInitialization();
@@ -20,6 +26,12 @@ export function useAuthState() {
     setUserProfile,
     setLoading,
     handleUserProfile
+  });
+
+  useAuthFailsafe({
+    initialized,
+    setLoading,
+    setInitialized
   });
 
   useEffect(() => {
@@ -68,20 +80,7 @@ export function useAuthState() {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
-
-  // Reduced failsafe timeout from 10 seconds to 5 seconds
-  useEffect(() => {
-    const failsafe = setTimeout(() => {
-      if (!initialized) {
-        console.log('Auth initialization failsafe triggered');
-        setLoading(false);
-        setInitialized(true);
-      }
-    }, 5000);
-
-    return () => clearTimeout(failsafe);
-  }, [initialized]);
+  }, [handleUserProfile, initializeAuth, handleAuthStateChange, handleConnectionError, setUser, setUserProfile, setLoading, setInitialized]);
 
   return {
     user,
