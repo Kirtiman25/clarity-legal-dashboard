@@ -9,17 +9,19 @@ const Index = () => {
   const navigate = useNavigate();
   const { user, userProfile, loading: authLoading, isAdmin } = useAuth();
   const [isInitialized, setIsInitialized] = useState(false);
+  const [hasNavigated, setHasNavigated] = useState(false);
 
   useEffect(() => {
-    // Only run when auth loading is complete
-    if (authLoading) return;
+    // Only run when auth loading is complete and haven't navigated yet
+    if (authLoading || hasNavigated) return;
 
     console.log('Index page - Auth state:', { 
       user: user?.email, 
       userProfile: !!userProfile, 
       authLoading,
       emailConfirmed: user?.email_confirmed_at ? 'Yes' : 'No',
-      isAdmin
+      isAdmin,
+      hasNavigated
     });
 
     // Check for email verification in URL
@@ -35,9 +37,9 @@ const Index = () => {
     // Handle email verification redirect
     if ((accessToken || type === 'signup') && !error) {
       console.log('Email verification detected, redirecting to verification success');
-      // Clean URL first
       window.history.replaceState({}, document.title, window.location.pathname);
       navigate('/verification-success');
+      setHasNavigated(true);
       setIsInitialized(true);
       return;
     }
@@ -46,6 +48,7 @@ const Index = () => {
     if (user && (user.email_confirmed_at || isAdmin)) {
       console.log('User authenticated and confirmed, redirecting to workspace');
       navigate('/workspace');
+      setHasNavigated(true);
       setIsInitialized(true);
       return;
     }
@@ -54,6 +57,7 @@ const Index = () => {
     if (user && userProfile && isAdmin) {
       console.log('Admin user with profile, redirecting to workspace');
       navigate('/workspace');
+      setHasNavigated(true);
       setIsInitialized(true);
       return;
     }
@@ -69,13 +73,14 @@ const Index = () => {
     if (!user) {
       console.log('No user found, redirecting to signup');
       navigate('/signup');
+      setHasNavigated(true);
       setIsInitialized(true);
       return;
     }
 
     // Fallback
     setIsInitialized(true);
-  }, [authLoading, user, userProfile, isAdmin, navigate]);
+  }, [authLoading, user, userProfile, isAdmin, navigate, hasNavigated]);
 
   // Show loading during auth initialization
   if (authLoading || !isInitialized) {
@@ -87,7 +92,10 @@ const Index = () => {
     return (
       <EmailConfirmationScreen 
         userEmail={user.email || ''} 
-        onBackToSignIn={() => navigate('/signin')}
+        onBackToSignIn={() => {
+          setHasNavigated(true);
+          navigate('/signin');
+        }}
       />
     );
   }

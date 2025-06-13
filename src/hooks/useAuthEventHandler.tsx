@@ -39,34 +39,56 @@ export function useAuthEventHandler({
       console.log('Setting user from session:', session.user.email);
       setUser(session.user);
       
-      // Handle sign in - show welcome toast immediately
+      // Handle sign in - show welcome toast only once
       if (event === 'SIGNED_IN') {
-        console.log('User signed in, showing welcome toast and processing profile...');
+        console.log('User signed in, showing welcome and processing profile...');
         showWelcomeToast();
-        const profile = await handleUserProfile(session.user, false); // Don't duplicate welcome toast
-        if (profile) {
-          setUserProfile(profile);
+        
+        try {
+          const profile = await handleUserProfile(session.user, false);
+          if (profile && mounted) {
+            setUserProfile(profile);
+          }
+        } catch (error) {
+          console.error('Error processing profile after sign in:', error);
         }
+        
         if (mounted) setLoading(false);
-      } else if (event === 'TOKEN_REFRESHED' && session.user.email_confirmed_at) {
-        console.log('Token refreshed for confirmed user');
-        const profile = await handleUserProfile(session.user);
-        if (profile) {
-          setUserProfile(profile);
+      } else if (event === 'TOKEN_REFRESHED') {
+        // Handle token refresh without showing welcome toast
+        console.log('Token refreshed, checking profile...');
+        
+        if (session.user.email_confirmed_at || isAdminEmail(session.user.email || '')) {
+          try {
+            const profile = await handleUserProfile(session.user, false);
+            if (profile && mounted) {
+              setUserProfile(profile);
+            }
+          } catch (error) {
+            console.error('Error processing profile after token refresh:', error);
+          }
         }
-        if (mounted) setLoading(false);
-      } else if (session.user.email_confirmed_at || isAdminEmail(session.user.email || '')) {
-        console.log('Processing profile for confirmed user or admin');
-        const profile = await handleUserProfile(session.user);
-        if (profile) {
-          setUserProfile(profile);
-        }
+        
         if (mounted) setLoading(false);
       } else {
-        // User not confirmed yet
-        console.log('User email not confirmed yet');
-        setUserProfile(null);
-        setLoading(false);
+        // Initial session or other events
+        if (session.user.email_confirmed_at || isAdminEmail(session.user.email || '')) {
+          console.log('Processing profile for confirmed user or admin');
+          
+          try {
+            const profile = await handleUserProfile(session.user, false);
+            if (profile && mounted) {
+              setUserProfile(profile);
+            }
+          } catch (error) {
+            console.error('Error processing profile:', error);
+          }
+        } else {
+          console.log('User email not confirmed yet');
+          setUserProfile(null);
+        }
+        
+        if (mounted) setLoading(false);
       }
     } else {
       console.log('No user in session');

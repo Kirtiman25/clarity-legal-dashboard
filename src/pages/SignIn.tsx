@@ -1,6 +1,6 @@
 
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,8 @@ import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const SignIn = () => {
-  const { signIn, loading } = useAuth();
+  const navigate = useNavigate();
+  const { signIn, loading, user } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -18,6 +19,14 @@ const SignIn = () => {
   });
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (user && !loading) {
+      console.log('User already authenticated, redirecting to workspace');
+      navigate('/workspace');
+    }
+  }, [user, loading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,14 +37,16 @@ const SignIn = () => {
       return;
     }
     
+    if (isSubmitting) return; // Prevent double submission
+    
     setIsSubmitting(true);
     
     try {
       console.log('SignIn: Attempting sign in for:', formData.email);
       await signIn(formData.email, formData.password);
       
-      console.log('SignIn: Sign in successful, letting Index handle navigation');
-      // Don't navigate manually - let the Index component handle the redirect
+      console.log('SignIn: Sign in successful');
+      // Navigation will be handled by useEffect above when user state updates
       
     } catch (error: any) {
       console.error('SignIn: Sign in error:', error);
@@ -44,6 +55,11 @@ const SignIn = () => {
       setIsSubmitting(false);
     }
   };
+
+  // Don't render the form if user is already authenticated
+  if (user && !loading) {
+    return <div>Redirecting...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
