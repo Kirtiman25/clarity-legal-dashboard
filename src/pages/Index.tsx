@@ -53,7 +53,6 @@ const Index = () => {
     // Handle authenticated users without userProfile but with confirmed email or admin
     if (user && (user.email_confirmed_at || isAdmin)) {
       console.log('User authenticated but no profile, redirecting to workspace');
-      // Remove the timeout - redirect immediately
       navigate('/workspace');
       setIsInitialized(true);
       return;
@@ -76,7 +75,7 @@ const Index = () => {
 
     // Fallback
     setIsInitialized(true);
-  }, [authLoading, user, userProfile, isAdmin, navigate]);
+  }, [authLoading, user, userProfile, isAdmin, navigate]); // Fixed dependencies
 
   // Show loading during auth initialization
   if (authLoading || !isInitialized) {
