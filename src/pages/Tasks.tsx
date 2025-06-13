@@ -9,7 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 const Tasks = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {

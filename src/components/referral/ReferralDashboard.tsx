@@ -24,46 +24,67 @@ interface Gift {
 }
 
 const ReferralDashboard = () => {
-  const { userProfile } = useAuth();
+  const { user, userProfile } = useAuth();
   const [stats, setStats] = useState<ReferralStats>({
     totalReferrals: 0,
     referralEarnings: 0,
     pendingRewards: 0
   });
   const [gifts, setGifts] = useState<Gift[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (userProfile) {
+    // Initialize immediately without loading
+    if (user) {
       fetchReferralData();
       fetchAvailableGifts();
     }
-  }, [userProfile]);
+  }, [user]);
 
   const fetchReferralData = async () => {
     try {
-      // Fetch referral count
-      const { count: referralCount } = await supabase
-        .from('referrals')
-        .select('*', { count: 'exact', head: true })
-        .eq('referrer_id', userProfile?.id);
+      setLoading(true);
+      
+      if (!user?.id) {
+        console.log('No user ID available');
+        return;
+      }
 
-      // Fetch referral earnings
-      const { data: earnings } = await supabase
-        .from('earnings')
-        .select('amount')
-        .eq('user_id', userProfile?.id)
-        .like('description', '%referral%');
+      // Fetch referral count with error handling
+      let referralCount = 0;
+      try {
+        const { count } = await supabase
+          .from('referrals')
+          .select('*', { count: 'exact', head: true })
+          .eq('referrer_id', user.id);
+        referralCount = count || 0;
+      } catch (error) {
+        console.error('Error fetching referral count:', error);
+      }
 
-      const totalEarnings = earnings?.reduce((sum, earning) => sum + Number(earning.amount), 0) || 0;
+      // Fetch referral earnings with error handling
+      let totalEarnings = 0;
+      try {
+        const { data: earnings } = await supabase
+          .from('earnings')
+          .select('amount')
+          .eq('user_id', user.id)
+          .like('description', '%referral%');
+
+        totalEarnings = earnings?.reduce((sum, earning) => sum + Number(earning.amount), 0) || 0;
+      } catch (error) {
+        console.error('Error fetching referral earnings:', error);
+      }
 
       setStats({
-        totalReferrals: referralCount || 0,
+        totalReferrals: referralCount,
         referralEarnings: totalEarnings,
-        pendingRewards: (referralCount || 0) * 500 // ₹500 per referral
+        pendingRewards: referralCount * 500 // ₹500 per referral
       });
     } catch (error) {
       console.error('Error fetching referral data:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -78,8 +99,6 @@ const ReferralDashboard = () => {
       setGifts(data || []);
     } catch (error) {
       console.error('Error fetching gifts:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -102,15 +121,6 @@ const ReferralDashboard = () => {
     });
   };
 
-  if (loading) {
-    return (
-      <div className="text-center py-8">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto"></div>
-        <p className="mt-4 text-gray-600">Loading referral data...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
@@ -120,7 +130,7 @@ const ReferralDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Referrals</p>
-                <p className="text-2xl font-bold">{stats.totalReferrals}</p>
+                <p className="text-2xl font-bold">{loading ? '...' : stats.totalReferrals}</p>
               </div>
               <Users className="h-8 w-8 text-blue-500" />
             </div>
@@ -132,7 +142,7 @@ const ReferralDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Earnings</p>
-                <p className="text-2xl font-bold text-green-600">₹{stats.referralEarnings}</p>
+                <p className="text-2xl font-bold text-green-600">₹{loading ? '...' : stats.referralEarnings}</p>
               </div>
               <DollarSign className="h-8 w-8 text-green-500" />
             </div>
@@ -144,7 +154,7 @@ const ReferralDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Pending Rewards</p>
-                <p className="text-2xl font-bold text-orange-600">₹{stats.pendingRewards}</p>
+                <p className="text-2xl font-bold text-orange-600">₹{loading ? '...' : stats.pendingRewards}</p>
               </div>
               <Gift className="h-8 w-8 text-orange-500" />
             </div>
@@ -162,11 +172,11 @@ const ReferralDashboard = () => {
             <label className="text-sm font-medium">Referral Code</label>
             <div className="flex space-x-2 mt-1">
               <Input 
-                value={userProfile?.referral_code || ''} 
+                value={userProfile?.referral_code || 'Loading...'} 
                 readOnly 
                 className="font-mono text-lg"
               />
-              <Button onClick={copyReferralCode} variant="outline">
+              <Button onClick={copyReferralCode} variant="outline" disabled={!userProfile?.referral_code}>
                 <Copy className="h-4 w-4" />
               </Button>
             </div>
@@ -176,11 +186,11 @@ const ReferralDashboard = () => {
             <label className="text-sm font-medium">Referral Link</label>
             <div className="flex space-x-2 mt-1">
               <Input 
-                value={`${window.location.origin}?ref=${userProfile?.referral_code}`} 
+                value={userProfile?.referral_code ? `${window.location.origin}?ref=${userProfile.referral_code}` : 'Loading...'} 
                 readOnly 
                 className="text-sm"
               />
-              <Button onClick={copyReferralLink} variant="outline">
+              <Button onClick={copyReferralLink} variant="outline" disabled={!userProfile?.referral_code}>
                 <Copy className="h-4 w-4" />
               </Button>
             </div>
