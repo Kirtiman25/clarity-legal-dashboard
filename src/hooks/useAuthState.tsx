@@ -39,10 +39,12 @@ export function useAuthState() {
     
     const initializeAuthState = async () => {
       try {
+        console.log('Initializing authentication...');
         const session = await initializeAuth();
         
         if (mounted) {
           if (session?.user) {
+            console.log('Session found for user:', session.user.email);
             setUser(session.user);
             // Process profile immediately for faster loading
             const profile = await handleUserProfile(session.user);
@@ -50,6 +52,7 @@ export function useAuthState() {
               setUserProfile(profile);
             }
           } else {
+            console.log('No session found');
             setUser(null);
             setUserProfile(null);
           }
@@ -68,9 +71,12 @@ export function useAuthState() {
       }
     };
 
-    // Set up auth state listener
+    // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      await handleAuthStateChange(event, session, mounted);
+      console.log('Auth state changed:', event, session?.user?.email || 'No session');
+      if (mounted) {
+        await handleAuthStateChange(event, session, mounted);
+      }
     });
 
     // Initialize auth
@@ -80,7 +86,7 @@ export function useAuthState() {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [handleUserProfile, initializeAuth, handleAuthStateChange, handleConnectionError, setUser, setUserProfile, setLoading, setInitialized]);
+  }, []); // Remove all dependencies to prevent re-initialization
 
   return {
     user,

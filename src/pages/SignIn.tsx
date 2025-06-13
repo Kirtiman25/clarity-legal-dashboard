@@ -7,56 +7,42 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
-import { signInUser } from '@/services/authService';
-import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 const SignIn = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const { signIn, loading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
     
     if (!formData.email || !formData.password) {
       setError('Please fill in all fields');
-      setLoading(false);
       return;
     }
     
+    setIsSubmitting(true);
+    
     try {
       console.log('Attempting sign in for:', formData.email);
-      const result = await signInUser(formData.email, formData.password);
+      await signIn(formData.email, formData.password);
       
-      if (result.user) {
-        toast({
-          title: "Success!",
-          description: "You have been signed in successfully.",
-        });
-        
-        // Navigate directly to workspace after successful sign-in
-        console.log('Sign in successful, navigating to workspace');
-        navigate('/workspace');
-      }
+      console.log('Sign in successful, navigating to workspace');
+      navigate('/workspace');
       
     } catch (error: any) {
       console.error('Sign in error:', error);
       setError(error.message || 'Failed to sign in');
-      
-      toast({
-        title: "Sign In Failed",
-        description: error.message || "Please check your credentials and try again.",
-        variant: "destructive",
-      });
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -98,7 +84,7 @@ const SignIn = () => {
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
                 required
                 className="h-12"
-                disabled={loading}
+                disabled={isSubmitting || loading}
               />
             </div>
             
@@ -113,7 +99,7 @@ const SignIn = () => {
                   onChange={(e) => setFormData({...formData, password: e.target.value})}
                   required
                   className="h-12 pr-10"
-                  disabled={loading}
+                  disabled={isSubmitting || loading}
                 />
                 <Button
                   type="button"
@@ -121,7 +107,7 @@ const SignIn = () => {
                   size="sm"
                   className="absolute right-0 top-0 h-12 px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
-                  disabled={loading}
+                  disabled={isSubmitting || loading}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4 text-gray-400" />
@@ -135,9 +121,9 @@ const SignIn = () => {
             <Button 
               type="submit" 
               className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white font-semibold"
-              disabled={loading}
+              disabled={isSubmitting || loading}
             >
-              {loading ? 'Signing In...' : 'Sign In'}
+              {isSubmitting || loading ? 'Signing In...' : 'Sign In'}
             </Button>
           </form>
           

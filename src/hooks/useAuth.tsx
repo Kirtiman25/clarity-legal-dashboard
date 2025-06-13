@@ -20,12 +20,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await signUpUser(email, password, fullName, referralCode);
       console.log('Signup completed successfully');
       
-      // Don't show additional toast here as authService already handles it
-      
     } catch (error: any) {
       console.error('Signup error in useAuth:', error);
       
-      // Show user-friendly error message
       const errorMessage = error.message || 'Failed to create account. Please try again.';
       toast({
         title: "Sign Up Failed",
@@ -41,7 +38,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      setLoading(true);
       console.log('Starting signin process for:', email);
       
       await signInUser(email, password);
@@ -50,9 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
     } catch (error: any) {
       console.error('Signin error in useAuth:', error);
-      setLoading(false);
       
-      // Show user-friendly error message
       const errorMessage = error.message || 'Failed to sign in. Please try again.';
       toast({
         title: "Sign In Failed", 
