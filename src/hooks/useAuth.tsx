@@ -74,11 +74,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Always provide a valid context value
   const value: AuthContextType = {
-    user,
-    userProfile,
+    user: user || null,
+    userProfile: userProfile || null,
     loading,
-    isAdmin,
+    isAdmin: isAdmin || false,
     signUp,
     signIn,
     signOut,
