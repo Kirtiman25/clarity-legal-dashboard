@@ -11,7 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 const SignIn = () => {
   const navigate = useNavigate();
-  const { signIn, loading, user } = useAuth();
+  const { signIn, loading, user, userProfile, isAdmin } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -20,13 +20,35 @@ const SignIn = () => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated - improved logic
   useEffect(() => {
-    if (user && !loading) {
-      console.log('User already authenticated, redirecting to workspace');
-      navigate('/workspace');
+    if (!loading && user) {
+      console.log('SignIn: User authenticated, checking redirect conditions', {
+        user: user.email,
+        emailConfirmed: user.email_confirmed_at ? 'Yes' : 'No',
+        isAdmin,
+        userProfile: !!userProfile
+      });
+      
+      // Admin users can always access workspace
+      if (isAdmin) {
+        console.log('SignIn: Admin user, redirecting to workspace');
+        navigate('/workspace', { replace: true });
+        return;
+      }
+      
+      // Regular users need email confirmation
+      if (user.email_confirmed_at) {
+        console.log('SignIn: Email confirmed, redirecting to workspace');
+        navigate('/workspace', { replace: true });
+        return;
+      } else {
+        console.log('SignIn: Email not confirmed, redirecting to index for verification');
+        navigate('/', { replace: true });
+        return;
+      }
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, isAdmin, userProfile]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,20 +67,38 @@ const SignIn = () => {
       console.log('SignIn: Attempting sign in for:', formData.email);
       await signIn(formData.email, formData.password);
       
-      console.log('SignIn: Sign in successful');
-      // Navigation will be handled by useEffect above when user state updates
+      console.log('SignIn: Sign in successful, waiting for auth state update');
+      // Don't navigate here - let the useEffect handle it after auth state updates
       
     } catch (error: any) {
       console.error('SignIn: Sign in error:', error);
       setError(error.message || 'Failed to sign in');
-    } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Don't render the form if user is already authenticated
-  if (user && !loading) {
-    return <div>Redirecting...</div>;
+  // Show loading while auth is being processed
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Signing you in...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render the form if user is already authenticated and we're about to redirect
+  if (user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Redirecting...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -99,7 +139,7 @@ const SignIn = () => {
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
                 required
                 className="h-12"
-                disabled={isSubmitting || loading}
+                disabled={isSubmitting}
               />
             </div>
             
@@ -114,7 +154,7 @@ const SignIn = () => {
                   onChange={(e) => setFormData({...formData, password: e.target.value})}
                   required
                   className="h-12 pr-10"
-                  disabled={isSubmitting || loading}
+                  disabled={isSubmitting}
                 />
                 <Button
                   type="button"
@@ -122,7 +162,7 @@ const SignIn = () => {
                   size="sm"
                   className="absolute right-0 top-0 h-12 px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
-                  disabled={isSubmitting || loading}
+                  disabled={isSubmitting}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4 text-gray-400" />
@@ -136,9 +176,9 @@ const SignIn = () => {
             <Button 
               type="submit" 
               className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white font-semibold"
-              disabled={isSubmitting || loading}
+              disabled={isSubmitting}
             >
-              {isSubmitting || loading ? 'Signing In...' : 'Sign In'}
+              {isSubmitting ? 'Signing In...' : 'Sign In'}
             </Button>
           </form>
           

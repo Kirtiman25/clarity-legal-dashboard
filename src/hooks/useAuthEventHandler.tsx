@@ -39,21 +39,31 @@ export function useAuthEventHandler({
       console.log('Setting user from session:', session.user.email);
       setUser(session.user);
       
-      // Handle sign in - show welcome toast only once
+      // Handle sign in - show welcome toast and process profile
       if (event === 'SIGNED_IN') {
-        console.log('User signed in, showing welcome and processing profile...');
+        console.log('User signed in, processing profile and finalizing auth...');
         showWelcomeToast();
         
-        try {
-          const profile = await handleUserProfile(session.user, false);
-          if (profile && mounted) {
-            setUserProfile(profile);
+        // Process profile asynchronously but don't block the UI
+        const processProfile = async () => {
+          try {
+            const profile = await handleUserProfile(session.user, false);
+            if (profile && mounted) {
+              setUserProfile(profile);
+            }
+          } catch (error) {
+            console.error('Error processing profile after sign in:', error);
+            // Don't block auth flow for profile errors
+          } finally {
+            if (mounted) {
+              setLoading(false);
+            }
           }
-        } catch (error) {
-          console.error('Error processing profile after sign in:', error);
-        }
+        };
         
-        if (mounted) setLoading(false);
+        // Start profile processing but don't wait for it
+        processProfile();
+        
       } else if (event === 'TOKEN_REFRESHED') {
         // Handle token refresh without showing welcome toast
         console.log('Token refreshed, checking profile...');
