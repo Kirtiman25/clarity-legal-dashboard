@@ -30,11 +30,33 @@ const ReferralDashboard = () => {
     referralEarnings: 0,
     pendingRewards: 0
   });
-  const [gifts, setGifts] = useState<Gift[]>([]);
+  const [gifts, setGifts] = useState<Gift[]>([
+    {
+      id: '1',
+      title: 'Cash Bonus',
+      description: 'Get ₹500 cash bonus',
+      required_referrals: 1,
+      image_emoji: '💰'
+    },
+    {
+      id: '2',
+      title: 'Premium Service',
+      description: 'Free premium service for 1 month',
+      required_referrals: 3,
+      image_emoji: '⭐'
+    },
+    {
+      id: '3',
+      title: 'Special Gift',
+      description: 'Exclusive gift package',
+      required_referrals: 5,
+      image_emoji: '🎁'
+    }
+  ]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Initialize immediately without loading
+    // Show content immediately, then fetch data
     if (user) {
       fetchReferralData();
       fetchAvailableGifts();
@@ -42,38 +64,48 @@ const ReferralDashboard = () => {
   }, [user]);
 
   const fetchReferralData = async () => {
+    if (!user?.id) {
+      console.log('No user ID available for referral data');
+      return;
+    }
+
     try {
       setLoading(true);
+      console.log('Fetching referral data for user:', user.id);
       
-      if (!user?.id) {
-        console.log('No user ID available');
-        return;
-      }
-
       // Fetch referral count with error handling
       let referralCount = 0;
       try {
-        const { count } = await supabase
+        const { count, error: countError } = await supabase
           .from('referrals')
           .select('*', { count: 'exact', head: true })
           .eq('referrer_id', user.id);
-        referralCount = count || 0;
+        
+        if (countError) {
+          console.log('No referrals table found or error:', countError);
+        } else {
+          referralCount = count || 0;
+        }
       } catch (error) {
-        console.error('Error fetching referral count:', error);
+        console.log('Error fetching referral count:', error);
       }
 
       // Fetch referral earnings with error handling
       let totalEarnings = 0;
       try {
-        const { data: earnings } = await supabase
+        const { data: earnings, error: earningsError } = await supabase
           .from('earnings')
           .select('amount')
           .eq('user_id', user.id)
           .like('description', '%referral%');
 
-        totalEarnings = earnings?.reduce((sum, earning) => sum + Number(earning.amount), 0) || 0;
+        if (earningsError) {
+          console.log('No earnings table found or error:', earningsError);
+        } else {
+          totalEarnings = earnings?.reduce((sum, earning) => sum + Number(earning.amount), 0) || 0;
+        }
       } catch (error) {
-        console.error('Error fetching referral earnings:', error);
+        console.log('Error fetching referral earnings:', error);
       }
 
       setStats({
@@ -95,10 +127,16 @@ const ReferralDashboard = () => {
         .select('*')
         .order('required_referrals', { ascending: true });
 
-      if (error) throw error;
-      setGifts(data || []);
+      if (error) {
+        console.log('No gifts table found, using default gifts:', error);
+        return; // Keep default gifts
+      }
+      
+      if (data && data.length > 0) {
+        setGifts(data);
+      }
     } catch (error) {
-      console.error('Error fetching gifts:', error);
+      console.log('Error fetching gifts, using defaults:', error);
     }
   };
 
@@ -130,7 +168,7 @@ const ReferralDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Referrals</p>
-                <p className="text-2xl font-bold">{loading ? '...' : stats.totalReferrals}</p>
+                <p className="text-2xl font-bold">{stats.totalReferrals}</p>
               </div>
               <Users className="h-8 w-8 text-blue-500" />
             </div>
@@ -142,7 +180,7 @@ const ReferralDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Earnings</p>
-                <p className="text-2xl font-bold text-green-600">₹{loading ? '...' : stats.referralEarnings}</p>
+                <p className="text-2xl font-bold text-green-600">₹{stats.referralEarnings}</p>
               </div>
               <DollarSign className="h-8 w-8 text-green-500" />
             </div>
@@ -154,7 +192,7 @@ const ReferralDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Pending Rewards</p>
-                <p className="text-2xl font-bold text-orange-600">₹{loading ? '...' : stats.pendingRewards}</p>
+                <p className="text-2xl font-bold text-orange-600">₹{stats.pendingRewards}</p>
               </div>
               <Gift className="h-8 w-8 text-orange-500" />
             </div>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import Header from '@/components/Header';
@@ -13,6 +12,9 @@ const Tasks = () => {
   const { user } = useAuth();
 
   useEffect(() => {
+    // Always show the page content immediately
+    setLoading(false);
+    
     if (user) {
       loadTasks();
     }
@@ -20,12 +22,15 @@ const Tasks = () => {
 
   const loadTasks = async () => {
     try {
+      console.log('Starting to load tasks...');
       setLoading(true);
       const userTasks = await fetchUserTasks();
       console.log('Loaded tasks:', userTasks);
       setTasks(userTasks);
     } catch (error) {
       console.error('Error loading tasks:', error);
+      // Don't keep loading state on error
+      setTasks([]);
     } finally {
       setLoading(false);
     }
