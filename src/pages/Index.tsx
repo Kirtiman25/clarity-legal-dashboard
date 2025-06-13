@@ -8,11 +8,10 @@ import EmailConfirmationScreen from '@/components/auth/EmailConfirmationScreen';
 const Index = () => {
   const navigate = useNavigate();
   const { user, userProfile, loading: authLoading, isAdmin } = useAuth();
-  const [isInitialized, setIsInitialized] = useState(false);
   const [hasNavigated, setHasNavigated] = useState(false);
 
   useEffect(() => {
-    // Only run when auth loading is complete and haven't navigated yet
+    // Prevent multiple navigation attempts
     if (authLoading || hasNavigated) return;
 
     console.log('Index page - Auth state:', { 
@@ -20,11 +19,10 @@ const Index = () => {
       userProfile: !!userProfile, 
       authLoading,
       emailConfirmed: user?.email_confirmed_at ? 'Yes' : 'No',
-      isAdmin,
-      hasNavigated
+      isAdmin
     });
 
-    // Check for email verification in URL
+    // Check for email verification in URL first
     const urlParams = new URLSearchParams(window.location.search);
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     
@@ -32,62 +30,51 @@ const Index = () => {
     const type = urlParams.get('type') || hashParams.get('type');
     const error = urlParams.get('error') || hashParams.get('error');
     
-    console.log('URL check:', { accessToken: !!accessToken, type, error });
-    
-    // Handle email verification redirect
     if ((accessToken || type === 'signup') && !error) {
       console.log('Email verification detected, redirecting to verification success');
       window.history.replaceState({}, document.title, window.location.pathname);
+      setHasNavigated(true);
       navigate('/verification-success');
-      setHasNavigated(true);
-      setIsInitialized(true);
       return;
     }
 
-    // Handle authenticated users - prioritize workspace redirect
-    if (user && (user.email_confirmed_at || isAdmin)) {
-      console.log('User authenticated and confirmed, redirecting to workspace');
-      navigate('/workspace');
-      setHasNavigated(true);
-      setIsInitialized(true);
-      return;
+    // Handle authenticated users
+    if (user) {
+      // Admin users can access workspace regardless of email confirmation
+      if (isAdmin) {
+        console.log('Admin user detected, redirecting to workspace');
+        setHasNavigated(true);
+        navigate('/workspace');
+        return;
+      }
+      
+      // Regular users need email confirmation
+      if (user.email_confirmed_at) {
+        console.log('User email confirmed, redirecting to workspace');
+        setHasNavigated(true);
+        navigate('/workspace');
+        return;
+      } else {
+        console.log('User email not confirmed, staying on confirmation screen');
+        return; // Stay on this page to show email confirmation screen
+      }
     }
 
-    // Handle authenticated users with profile but unconfirmed email (admin bypass)
-    if (user && userProfile && isAdmin) {
-      console.log('Admin user with profile, redirecting to workspace');
-      navigate('/workspace');
-      setHasNavigated(true);
-      setIsInitialized(true);
-      return;
-    }
-
-    // Handle authenticated users without confirmed email (not admin)
-    if (user && !user.email_confirmed_at && !isAdmin) {
-      console.log('User email not confirmed, showing confirmation screen');
-      setIsInitialized(true);
-      return;
-    }
-
-    // Handle unauthenticated users
+    // No user - redirect to signup
     if (!user) {
       console.log('No user found, redirecting to signup');
-      navigate('/signup');
       setHasNavigated(true);
-      setIsInitialized(true);
+      navigate('/signup');
       return;
     }
-
-    // Fallback
-    setIsInitialized(true);
   }, [authLoading, user, userProfile, isAdmin, navigate, hasNavigated]);
 
   // Show loading during auth initialization
-  if (authLoading || !isInitialized) {
+  if (authLoading) {
     return <LoadingScreen />;
   }
 
-  // Show email confirmation screen for unverified users
+  // Show email confirmation screen for unverified users (non-admin)
   if (user && !user.email_confirmed_at && !isAdmin) {
     return (
       <EmailConfirmationScreen 

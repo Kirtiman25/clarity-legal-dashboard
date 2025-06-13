@@ -58,18 +58,31 @@ export function useAuthState() {
           if (session?.user) {
             console.log('Session found for user:', session.user.email);
             setUser(session.user);
-            // Process profile immediately for faster loading
-            const profile = await handleUserProfile(session.user);
-            if (profile) {
-              setUserProfile(profile);
-            }
+            
+            // Process profile with timeout to prevent blocking
+            setTimeout(async () => {
+              if (mounted) {
+                try {
+                  const profile = await handleUserProfile(session.user);
+                  if (profile && mounted) {
+                    setUserProfile(profile);
+                  }
+                } catch (error) {
+                  console.error('Profile processing error:', error);
+                }
+                if (mounted) {
+                  setLoading(false);
+                  setInitialized(true);
+                }
+              }
+            }, 100);
           } else {
             console.log('No session found');
             setUser(null);
             setUserProfile(null);
+            setLoading(false);
+            setInitialized(true);
           }
-          setLoading(false);
-          setInitialized(true);
         }
       } catch (error) {
         console.error('Auth initialization error:', error);

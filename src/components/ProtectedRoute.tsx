@@ -2,6 +2,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import LoadingScreen from '@/components/auth/LoadingScreen';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -13,34 +14,36 @@ const ProtectedRoute = ({ children, requirePaid = false }: ProtectedRouteProps) 
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Only redirect if loading is complete
     if (!loading) {
       if (!user) {
-        console.log('No user found, redirecting to login');
-        navigate('/');
+        console.log('ProtectedRoute: No user found, redirecting to signin');
+        navigate('/signin');
         return;
       }
       
-      if (!userProfile) {
-        console.log('No user profile found, redirecting to login');
-        navigate('/');
+      // For admin users, allow access even without profile
+      if (user && !userProfile && user.email !== 'uttamkumar30369@gmail.com') {
+        console.log('ProtectedRoute: No user profile found for non-admin, redirecting to signin');
+        navigate('/signin');
         return;
       }
     }
   }, [user, userProfile, loading, navigate]);
 
+  // Show loading while auth is initializing
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
-  if (!user || !userProfile) {
-    return null;
+  // Don't render if no user (will redirect)
+  if (!user) {
+    return <LoadingScreen />;
+  }
+
+  // For admin, allow access even without profile
+  if (!userProfile && user.email !== 'uttamkumar30369@gmail.com') {
+    return <LoadingScreen />;
   }
 
   return <>{children}</>;
