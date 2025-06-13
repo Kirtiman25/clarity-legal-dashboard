@@ -36,10 +36,22 @@ export function useAuthState() {
 
   useEffect(() => {
     let mounted = true;
+    let subscription: any = null;
     
     const initializeAuthState = async () => {
       try {
         console.log('Initializing authentication...');
+        
+        // Set up auth state listener first
+        const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
+          console.log('Auth state changed:', event, session?.user?.email || 'No session');
+          if (mounted) {
+            await handleAuthStateChange(event, session, mounted);
+          }
+        });
+        subscription = data.subscription;
+
+        // Then get initial session
         const session = await initializeAuth();
         
         if (mounted) {
@@ -71,22 +83,18 @@ export function useAuthState() {
       }
     };
 
-    // Set up auth state listener first
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session?.user?.email || 'No session');
-      if (mounted) {
-        await handleAuthStateChange(event, session, mounted);
-      }
-    });
-
-    // Initialize auth
-    initializeAuthState();
+    // Only initialize once
+    if (!initialized) {
+      initializeAuthState();
+    }
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      if (subscription) {
+        subscription.unsubscribe();
+      }
     };
-  }, []); // Remove all dependencies to prevent re-initialization
+  }, [initialized]); // Only depend on initialized to prevent re-initialization
 
   return {
     user,

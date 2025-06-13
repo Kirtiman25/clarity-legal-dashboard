@@ -32,14 +32,14 @@ const SignIn = () => {
     setIsSubmitting(true);
     
     try {
-      console.log('Attempting sign in for:', formData.email);
+      console.log('SignIn: Attempting sign in for:', formData.email);
       await signIn(formData.email, formData.password);
       
-      console.log('Sign in successful, navigating to workspace');
+      console.log('SignIn: Sign in successful, navigating to workspace');
       navigate('/workspace');
       
     } catch (error: any) {
-      console.error('Sign in error:', error);
+      console.error('SignIn: Sign in error:', error);
       setError(error.message || 'Failed to sign in');
     } finally {
       setIsSubmitting(false);
