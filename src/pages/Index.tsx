@@ -52,17 +52,10 @@ const Index = () => {
 
     // Handle authenticated users without userProfile but with confirmed email or admin
     if (user && (user.email_confirmed_at || isAdmin)) {
-      console.log('User authenticated, waiting for profile creation...');
-      // Give some time for profile creation, then redirect
-      setTimeout(() => {
-        if (userProfile) {
-          navigate('/workspace');
-        } else {
-          console.log('Profile not created, redirecting to workspace anyway');
-          navigate('/workspace');
-        }
-        setIsInitialized(true);
-      }, 1500);
+      console.log('User authenticated but no profile, redirecting to workspace');
+      // Remove the timeout - redirect immediately
+      navigate('/workspace');
+      setIsInitialized(true);
       return;
     }
 

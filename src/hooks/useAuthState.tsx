@@ -108,19 +108,14 @@ export function useAuthState() {
         if (mounted) {
           if (session?.user) {
             setUser(session.user);
-            // Don't await this to avoid blocking loading state
-            handleUserProfile(session.user).finally(() => {
-              if (mounted) {
-                setLoading(false);
-                setInitialized(true);
-              }
-            });
+            // Process profile immediately for faster loading
+            await handleUserProfile(session.user);
           } else {
             setUser(null);
             setUserProfile(null);
-            setLoading(false);
-            setInitialized(true);
           }
+          setLoading(false);
+          setInitialized(true);
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
@@ -153,15 +148,11 @@ export function useAuthState() {
         
         // Handle sign in or token refresh with confirmed email
         if (event === 'SIGNED_IN' || (event === 'TOKEN_REFRESHED' && session.user.email_confirmed_at)) {
-          // Don't await to avoid blocking
-          handleUserProfile(session.user, event === 'SIGNED_IN').finally(() => {
-            if (mounted) setLoading(false);
-          });
+          await handleUserProfile(session.user, event === 'SIGNED_IN');
+          if (mounted) setLoading(false);
         } else if (session.user.email_confirmed_at || isAdminEmail(session.user.email || '')) {
-          // Don't await to avoid blocking
-          handleUserProfile(session.user).finally(() => {
-            if (mounted) setLoading(false);
-          });
+          await handleUserProfile(session.user);
+          if (mounted) setLoading(false);
         } else {
           // User not confirmed yet
           setUserProfile(null);
@@ -183,7 +174,7 @@ export function useAuthState() {
     };
   }, []);
 
-  // Failsafe: if auth hasn't initialized within 10 seconds, stop loading
+  // Reduced failsafe timeout from 10 seconds to 5 seconds
   useEffect(() => {
     const failsafe = setTimeout(() => {
       if (!initialized) {
@@ -191,7 +182,7 @@ export function useAuthState() {
         setLoading(false);
         setInitialized(true);
       }
-    }, 10000);
+    }, 5000);
 
     return () => clearTimeout(failsafe);
   }, [initialized]);
