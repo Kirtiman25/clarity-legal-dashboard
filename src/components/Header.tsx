@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { LogOut, Users, Trophy, Home, MessageSquare, BarChart3 } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useSimpleAuth';
 import { useState } from 'react';
 
 interface HeaderProps {
@@ -13,24 +13,19 @@ interface HeaderProps {
 
 const Header = ({ title }: HeaderProps) => {
   const navigate = useNavigate();
-  const { user, userProfile, signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
     
     setIsLoggingOut(true);
-    console.log('Header: Starting logout');
     
     try {
       await signOut();
-      console.log('Header: Logout completed');
-      
-      // Simple redirect
       navigate('/', { replace: true });
     } catch (error) {
-      console.error('Header: Logout error:', error);
-      // Force redirect even on error
+      console.error('Logout error:', error);
       navigate('/', { replace: true });
     } finally {
       setIsLoggingOut(false);
@@ -47,8 +42,8 @@ const Header = ({ title }: HeaderProps) => {
 
   if (!user) return null;
 
-  const displayName = userProfile?.full_name || user.email?.split('@')[0] || 'User';
-  const displayEmail = userProfile?.email || user.email || '';
+  const displayName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
+  const displayEmail = user.email || '';
 
   return (
     <div className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 shadow-sm z-50">
@@ -66,7 +61,7 @@ const Header = ({ title }: HeaderProps) => {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
               <Avatar className="h-10 w-10">
-                <AvatarImage src={userProfile?.profile_picture} />
+                <AvatarImage src="" />
                 <AvatarFallback className="bg-orange-500 text-white">
                   {displayName.charAt(0)?.toUpperCase() || 'U'}
                 </AvatarFallback>

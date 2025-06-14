@@ -7,24 +7,23 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
-import { useSecureAuth } from '@/hooks/useSecureAuth';
+import { useAuth } from '@/hooks/useSimpleAuth';
 
 const SignIn = () => {
   const navigate = useNavigate();
-  const { user, loading: authLoading, isAdmin } = useAuth();
-  const { signIn, isSubmitting } = useSecureAuth();
+  const { user, loading: authLoading, isAdmin, signIn } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Handle redirect for authenticated users
+  // Redirect authenticated users
   useEffect(() => {
     if (user && !authLoading) {
-      console.log('SignIn: User authenticated, redirecting');
+      console.log('User authenticated, redirecting');
       if (isAdmin || user.email_confirmed_at) {
         navigate('/workspace', { replace: true });
       } else {
@@ -37,14 +36,19 @@ const SignIn = () => {
     e.preventDefault();
     setError('');
     
-    console.log('SignIn: Form submitted for:', formData.email);
+    if (!formData.email.trim() || !formData.password) {
+      setError('Please fill in all fields');
+      return;
+    }
+    
+    setIsSubmitting(true);
     
     try {
       await signIn(formData.email, formData.password);
-      // Navigation handled by useEffect above
     } catch (error: any) {
-      console.error('SignIn: Error:', error);
       setError(error.message || 'Failed to sign in');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -111,6 +115,7 @@ const SignIn = () => {
                 required
                 className="h-12"
                 autoComplete="email"
+                disabled={isSubmitting}
               />
             </div>
             
@@ -126,6 +131,7 @@ const SignIn = () => {
                   required
                   className="h-12 pr-10"
                   autoComplete="current-password"
+                  disabled={isSubmitting}
                 />
                 <Button
                   type="button"
@@ -134,6 +140,7 @@ const SignIn = () => {
                   className="absolute right-0 top-0 h-12 px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
                   tabIndex={-1}
+                  disabled={isSubmitting}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4 text-gray-400" />
