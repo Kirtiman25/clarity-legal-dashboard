@@ -17,12 +17,19 @@ const Header = ({ title }: HeaderProps) => {
   const handleLogout = async () => {
     try {
       console.log('Header: Starting logout process');
+      
+      // Call signOut and wait for it to complete
       await signOut();
-      console.log('Header: Logout completed, navigating to home');
-      // Force navigation to home page and replace history
-      navigate('/', { replace: true });
+      
+      console.log('Header: Logout completed, forcing navigation');
+      
+      // Force immediate navigation and page refresh
+      window.location.href = '/';
+      
     } catch (error) {
       console.error('Header: Logout error:', error);
+      // Even if there's an error, force navigation to clear state
+      window.location.href = '/';
     }
   };
 

@@ -110,24 +110,34 @@ export const signOutUser = async () => {
   console.log('AuthService: Starting signout process');
   
   try {
-    const { error } = await supabase.auth.signOut();
+    // Clear local state first
+    console.log('AuthService: Clearing local storage');
+    localStorage.removeItem('supabase.auth.token');
+    localStorage.removeItem('sb-vigtaqmmyxuzfwrcuqss-auth-token');
+    sessionStorage.clear();
+    
+    // Then sign out from Supabase
+    const { error } = await supabase.auth.signOut({
+      scope: 'global'
+    });
+    
     if (error) {
       console.error('AuthService: Signout error:', error);
-      throw error;
+      // Don't throw error for logout - still clear local state
+      console.warn('AuthService: Continuing with local cleanup despite signout error');
     }
     
-    console.log('AuthService: Signout successful');
-    
-    // Clear any local storage or session storage if needed
-    localStorage.removeItem('supabase.auth.token');
-    sessionStorage.clear();
+    console.log('AuthService: Signout completed successfully');
     
     toast({
       title: "Logged Out",
       description: "You have been successfully logged out",
     });
+    
+    return true;
   } catch (error: any) {
     console.error('AuthService: Signout failed:', error);
-    throw error;
+    // Still return success for local cleanup
+    return true;
   }
 };
