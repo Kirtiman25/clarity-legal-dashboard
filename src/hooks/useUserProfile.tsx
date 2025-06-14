@@ -6,8 +6,9 @@ import type { User } from '@supabase/supabase-js';
 
 export const useUserProfileOperations = () => {
   const isAdminEmail = (email: string) => {
-    // Only this specific email should get admin privileges
-    return email === 'uttamkumar30369@gmail.com';
+    // Only this specific email should get admin privileges - be very strict
+    const adminEmail = 'uttamkumar30369@gmail.com';
+    return email === adminEmail;
   };
 
   const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
@@ -74,8 +75,11 @@ export const useUserProfileOperations = () => {
         return Math.random().toString(36).substring(2, 8).toUpperCase();
       };
 
-      // Only grant admin privileges to the specific admin email
-      const isAdmin = isAdminEmail(user.email || '');
+      // STRICT admin check - only grant admin privileges to the specific admin email
+      const userEmail = user.email || '';
+      const isAdmin = isAdminEmail(userEmail);
+      
+      console.log('Admin check for', userEmail, ':', isAdmin);
       
       const profileData = {
         id: user.id,
@@ -83,13 +87,16 @@ export const useUserProfileOperations = () => {
         full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
         referral_code: generateReferralCode(),
         referred_by: user.user_metadata?.referred_by || null,
-        is_paid: isAdmin ? true : false, // Only admin gets paid status automatically
+        is_paid: isAdmin, // Only admin gets paid status automatically
         role: isAdmin ? 'admin' as const : 'user' as const, // Explicit role assignment
       };
 
       console.log('Attempting to insert profile data:', {
         ...profileData,
-        id: profileData.id.substring(0, 8) + '...' // Log truncated ID for privacy
+        id: profileData.id.substring(0, 8) + '...', // Log truncated ID for privacy
+        email: profileData.email,
+        role: profileData.role,
+        is_paid: profileData.is_paid
       });
       
       const { data, error } = await supabase
@@ -112,7 +119,10 @@ export const useUserProfileOperations = () => {
 
       console.log('Successfully created user profile:', {
         ...data,
-        id: data.id.substring(0, 8) + '...' // Log truncated ID for privacy
+        id: data.id.substring(0, 8) + '...', // Log truncated ID for privacy
+        email: data.email,
+        role: data.role,
+        is_paid: data.is_paid
       });
       
       // Only show admin message for the actual admin user
