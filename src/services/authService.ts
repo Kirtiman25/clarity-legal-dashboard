@@ -107,22 +107,27 @@ export const signInUser = async (email: string, password: string) => {
 };
 
 export const signOutUser = async () => {
-  console.log('Starting signout');
+  console.log('AuthService: Starting signout process');
   
   try {
     const { error } = await supabase.auth.signOut();
     if (error) {
-      console.error('Signout error:', error);
+      console.error('AuthService: Signout error:', error);
       throw error;
     }
     
-    console.log('Signout successful');
+    console.log('AuthService: Signout successful');
+    
+    // Clear any local storage or session storage if needed
+    localStorage.removeItem('supabase.auth.token');
+    sessionStorage.clear();
+    
     toast({
       title: "Logged Out",
       description: "You have been successfully logged out",
     });
   } catch (error: any) {
-    console.error('Signout failed:', error);
+    console.error('AuthService: Signout failed:', error);
     throw error;
   }
 };

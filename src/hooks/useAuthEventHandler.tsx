@@ -28,10 +28,15 @@ export function useAuthEventHandler({
     
     // Handle different auth events
     if (event === 'SIGNED_OUT') {
-      console.log('User signed out');
+      console.log('User signed out, clearing state');
       setUser(null);
       setUserProfile(null);
       setLoading(false);
+      
+      // Force a page reload to ensure clean state
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 100);
       return;
     }
     

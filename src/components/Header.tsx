@@ -15,8 +15,15 @@ const Header = ({ title }: HeaderProps) => {
   const { user, userProfile, signOut, loading } = useAuth();
 
   const handleLogout = async () => {
-    await signOut();
-    navigate('/');
+    try {
+      console.log('Header: Starting logout process');
+      await signOut();
+      console.log('Header: Logout completed, navigating to home');
+      // Force navigation to home page and replace history
+      navigate('/', { replace: true });
+    } catch (error) {
+      console.error('Header: Logout error:', error);
+    }
   };
 
   const menuItems = [
