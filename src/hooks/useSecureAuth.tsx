@@ -77,25 +77,12 @@ export function useSecureAuth() {
 
     if (!validation.success) {
       const errorMessage = validation.error.errors[0]?.message || 'Invalid input';
-      toast({
-        title: "Validation Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
       throw new Error(errorMessage);
     }
 
     setIsSubmitting(true);
     try {
       await originalSignIn(validation.data.email, validation.data.password);
-    } catch (error: any) {
-      // Show user-friendly error message
-      toast({
-        title: "Sign In Failed",
-        description: error.message || "Please check your credentials and try again.",
-        variant: "destructive",
-      });
-      throw error;
     } finally {
       setIsSubmitting(false);
     }

@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { LogOut, Users, Trophy, Home, MessageSquare, BarChart3, User } from 'lucide-react';
+import { LogOut, Users, Trophy, Home, MessageSquare, BarChart3 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useState } from 'react';
 
 interface HeaderProps {
   title: string;
@@ -12,24 +13,32 @@ interface HeaderProps {
 
 const Header = ({ title }: HeaderProps) => {
   const navigate = useNavigate();
-  const { user, userProfile, signOut, loading } = useAuth();
+  const { user, userProfile, signOut } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
+    if (isLoggingOut) return; // Prevent multiple logout attempts
+    
     try {
+      setIsLoggingOut(true);
       console.log('Header: Starting logout process');
       
-      // Call signOut and wait for it to complete
       await signOut();
       
-      console.log('Header: Logout completed, forcing navigation');
+      console.log('Header: Logout completed, redirecting to home');
+      navigate('/', { replace: true });
       
-      // Force immediate navigation and page refresh
-      window.location.href = '/';
+      // Force page refresh to clear any remaining state
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 100);
       
     } catch (error) {
       console.error('Header: Logout error:', error);
-      // Even if there's an error, force navigation to clear state
+      // Force navigation even if signout fails
       window.location.href = '/';
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -77,7 +86,6 @@ const Header = ({ title }: HeaderProps) => {
               <div className="flex flex-col space-y-1 leading-none">
                 <p className="font-medium">{displayName}</p>
                 <p className="text-xs text-muted-foreground">{displayEmail}</p>
-                {loading && <p className="text-xs text-gray-400">Loading profile...</p>}
               </div>
             </div>
             
@@ -96,9 +104,13 @@ const Header = ({ title }: HeaderProps) => {
             
             <DropdownMenuSeparator />
             
-            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600">
+            <DropdownMenuItem 
+              onClick={handleLogout} 
+              className="cursor-pointer text-red-600"
+              disabled={isLoggingOut}
+            >
               <LogOut className="mr-2 h-4 w-4" />
-              <span>Log out</span>
+              <span>{isLoggingOut ? 'Logging out...' : 'Log out'}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

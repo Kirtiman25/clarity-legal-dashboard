@@ -8,47 +8,31 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useSecureAuth } from '@/hooks/useSecureAuth';
 
 const SignIn = () => {
   const navigate = useNavigate();
-  const { signIn, loading, user, userProfile, isAdmin } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
+  const { signIn, isSubmitting } = useSecureAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
   const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Redirect if already authenticated - improved logic
+  // Redirect if already authenticated
   useEffect(() => {
     if (!loading && user) {
-      console.log('SignIn: User authenticated, checking redirect conditions', {
-        user: user.email,
-        emailConfirmed: user.email_confirmed_at ? 'Yes' : 'No',
-        isAdmin,
-        userProfile: !!userProfile
-      });
+      console.log('SignIn: User authenticated, redirecting');
       
-      // Admin users can always access workspace
-      if (isAdmin) {
-        console.log('SignIn: Admin user, redirecting to workspace');
+      if (isAdmin || user.email_confirmed_at) {
         navigate('/workspace', { replace: true });
-        return;
-      }
-      
-      // Regular users need email confirmation
-      if (user.email_confirmed_at) {
-        console.log('SignIn: Email confirmed, redirecting to workspace');
-        navigate('/workspace', { replace: true });
-        return;
       } else {
-        console.log('SignIn: Email not confirmed, redirecting to index for verification');
         navigate('/', { replace: true });
-        return;
       }
     }
-  }, [user, loading, navigate, isAdmin, userProfile]);
+  }, [user, loading, navigate, isAdmin]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,21 +43,13 @@ const SignIn = () => {
       return;
     }
     
-    if (isSubmitting) return; // Prevent double submission
-    
-    setIsSubmitting(true);
-    
     try {
       console.log('SignIn: Attempting sign in for:', formData.email);
       await signIn(formData.email, formData.password);
-      
-      console.log('SignIn: Sign in successful, waiting for auth state update');
-      // Don't navigate here - let the useEffect handle it after auth state updates
-      
+      // Navigation will be handled by the useEffect above
     } catch (error: any) {
       console.error('SignIn: Sign in error:', error);
       setError(error.message || 'Failed to sign in');
-      setIsSubmitting(false);
     }
   };
 
@@ -83,13 +59,13 @@ const SignIn = () => {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Signing you in...</p>
+          <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       </div>
     );
   }
 
-  // Don't render the form if user is already authenticated and we're about to redirect
+  // Don't render the form if user is already authenticated
   if (user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
