@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import type { UserProfile } from '@/types/auth';
@@ -6,9 +5,9 @@ import type { User } from '@supabase/supabase-js';
 
 export const useUserProfileOperations = () => {
   const isAdminEmail = (email: string) => {
-    // Only this specific email should get admin privileges - be very strict
-    const adminEmail = 'uttamkumar30369@gmail.com';
-    return email === adminEmail;
+    // Updated to include both admin emails - be very strict
+    const adminEmails = ['uttamkumar30369@gmail.com', 'clarcatalyst123@gmail.com'];
+    return adminEmails.includes(email);
   };
 
   const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
