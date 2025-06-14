@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useAuth } from './useAuth';
-import { signUpSchema, signInSchema, sanitizeText, createRateLimiter } from '@/lib/validation';
+import { signUpSchema, sanitizeText, createRateLimiter } from '@/lib/validation';
 import { toast } from '@/hooks/use-toast';
 
 // Rate limiters for auth operations
@@ -69,20 +69,16 @@ export function useSecureAuth() {
       throw new Error('Rate limit exceeded');
     }
 
-    // Validate input
-    const validation = signInSchema.safeParse({
-      email: email.toLowerCase().trim(),
-      password,
-    });
-
-    if (!validation.success) {
-      const errorMessage = validation.error.errors[0]?.message || 'Invalid input';
-      throw new Error(errorMessage);
+    // Basic validation for sign in (less strict than signup)
+    if (!email || !password) {
+      throw new Error('Email and password are required');
     }
+
+    const cleanEmail = email.toLowerCase().trim();
 
     setIsSubmitting(true);
     try {
-      await originalSignIn(validation.data.email, validation.data.password);
+      await originalSignIn(cleanEmail, password);
     } finally {
       setIsSubmitting(false);
     }

@@ -12,7 +12,7 @@ import { useSecureAuth } from '@/hooks/useSecureAuth';
 
 const SignIn = () => {
   const navigate = useNavigate();
-  const { user, loading, isAdmin } = useAuth();
+  const { user, loading: authLoading, isAdmin } = useAuth();
   const { signIn, isSubmitting } = useSecureAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -23,7 +23,7 @@ const SignIn = () => {
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (!loading && user) {
+    if (user && !authLoading) {
       console.log('SignIn: User authenticated, redirecting');
       
       if (isAdmin || user.email_confirmed_at) {
@@ -32,7 +32,7 @@ const SignIn = () => {
         navigate('/', { replace: true });
       }
     }
-  }, [user, loading, navigate, isAdmin]);
+  }, [user, authLoading, navigate, isAdmin]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,8 +53,8 @@ const SignIn = () => {
     }
   };
 
-  // Show loading while auth is being processed
-  if (loading) {
+  // Show loading only during initial auth check
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
         <div className="text-center">
@@ -116,6 +116,7 @@ const SignIn = () => {
                 required
                 className="h-12"
                 disabled={isSubmitting}
+                autoComplete="email"
               />
             </div>
             
@@ -131,6 +132,7 @@ const SignIn = () => {
                   required
                   className="h-12 pr-10"
                   disabled={isSubmitting}
+                  autoComplete="current-password"
                 />
                 <Button
                   type="button"
@@ -139,6 +141,7 @@ const SignIn = () => {
                   className="absolute right-0 top-0 h-12 px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
                   disabled={isSubmitting}
+                  tabIndex={-1}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4 text-gray-400" />
