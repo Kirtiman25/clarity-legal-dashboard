@@ -4,11 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import LoadingScreen from '@/components/auth/LoadingScreen';
 import EmailConfirmationScreen from '@/components/auth/EmailConfirmationScreen';
+import { Button } from '@/components/ui/button';
 
 const Index = () => {
   const navigate = useNavigate();
   const { user, userProfile, loading: authLoading, isAdmin } = useAuth();
   const [hasNavigated, setHasNavigated] = useState(false);
+  const [showLoggedOutState, setShowLoggedOutState] = useState(false);
 
   useEffect(() => {
     // Prevent multiple navigation attempts
@@ -60,11 +62,10 @@ const Index = () => {
       }
     }
 
-    // No user - redirect to signup
+    // No user - show logged out state instead of immediately redirecting
     if (!user) {
-      console.log('No user found, redirecting to signup');
-      setHasNavigated(true);
-      navigate('/signup');
+      console.log('No user found, showing logged out state');
+      setShowLoggedOutState(true);
       return;
     }
   }, [authLoading, user, userProfile, isAdmin, navigate, hasNavigated]);
@@ -84,6 +85,42 @@ const Index = () => {
           navigate('/signin');
         }}
       />
+    );
+  }
+
+  // Show logged out welcome page
+  if (showLoggedOutState || !user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-blue-50 flex items-center justify-center">
+        <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8 text-center">
+          <img 
+            src="/lovable-uploads/fa1e0532-ff2a-474a-a3c6-ce13d2cbb813.png" 
+            alt="Clar Catalyst Logo" 
+            className="h-24 w-auto mx-auto mb-6"
+          />
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            Welcome to Clar Catalyst
+          </h1>
+          <p className="text-gray-600 mb-6">
+            Your gateway to legal excellence and career growth.
+          </p>
+          <div className="space-y-3">
+            <Button 
+              onClick={() => navigate('/signin')} 
+              className="w-full bg-orange-500 hover:bg-orange-600"
+            >
+              Sign In
+            </Button>
+            <Button 
+              onClick={() => navigate('/signup')} 
+              variant="outline" 
+              className="w-full"
+            >
+              Create Account
+            </Button>
+          </div>
+        </div>
+      </div>
     );
   }
 
