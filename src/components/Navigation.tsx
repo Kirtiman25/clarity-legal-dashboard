@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAdmin } = useAuth();
+  const { isAdmin, userProfile } = useAuth();
 
   const userNavItems = [
     { icon: Home, label: 'Home', path: '/workspace' },
@@ -25,7 +25,9 @@ const Navigation = () => {
     { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' }
   ];
 
-  const navItems = isAdmin ? adminNavItems : userNavItems;
+  // Only show admin navigation if user is confirmed admin with proper profile
+  const shouldShowAdminNav = isAdmin && userProfile && userProfile.role === 'admin';
+  const navItems = shouldShowAdminNav ? adminNavItems : userNavItems;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">

@@ -6,6 +6,7 @@ import type { User } from '@supabase/supabase-js';
 
 export const useUserProfileOperations = () => {
   const isAdminEmail = (email: string) => {
+    // Only this specific email should get admin privileges
     return email === 'uttamkumar30369@gmail.com';
   };
 
@@ -25,7 +26,7 @@ export const useUserProfileOperations = () => {
           return null;
         }
         console.error('Error fetching user profile:', error);
-        throw error; // Throw to handle upstream
+        throw error;
       }
 
       console.log('Successfully fetched user profile:', data);
@@ -46,21 +47,21 @@ export const useUserProfileOperations = () => {
             
           if (updateError) {
             console.error('Error updating admin role:', updateError);
-            return data; // Return original data if update fails
+            return data;
           }
           
           console.log('Successfully updated admin role:', updatedData);
           return updatedData;
         } catch (updateError) {
           console.error('Exception updating admin role:', updateError);
-          return data; // Return original data if update fails
+          return data;
         }
       }
       
       return data;
     } catch (error) {
       console.error('Exception in fetchUserProfile:', error);
-      throw error; // Re-throw to handle upstream
+      throw error;
     }
   };
 
@@ -73,7 +74,7 @@ export const useUserProfileOperations = () => {
         return Math.random().toString(36).substring(2, 8).toUpperCase();
       };
 
-      // Check if this is the admin email and set role accordingly
+      // Only grant admin privileges to the specific admin email
       const isAdmin = isAdminEmail(user.email || '');
       
       const profileData = {
@@ -82,11 +83,14 @@ export const useUserProfileOperations = () => {
         full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
         referral_code: generateReferralCode(),
         referred_by: user.user_metadata?.referred_by || null,
-        is_paid: isAdmin ? true : false,
-        role: isAdmin ? 'admin' as const : 'user' as const,
+        is_paid: isAdmin ? true : false, // Only admin gets paid status automatically
+        role: isAdmin ? 'admin' as const : 'user' as const, // Explicit role assignment
       };
 
-      console.log('Attempting to insert profile data:', profileData);
+      console.log('Attempting to insert profile data:', {
+        ...profileData,
+        id: profileData.id.substring(0, 8) + '...' // Log truncated ID for privacy
+      });
       
       const { data, error } = await supabase
         .from('users')
@@ -103,24 +107,33 @@ export const useUserProfileOperations = () => {
           return await fetchUserProfile(user.id);
         }
         
-        throw error; // Re-throw other errors
+        throw error;
       }
 
-      console.log('Successfully created user profile:', data);
+      console.log('Successfully created user profile:', {
+        ...data,
+        id: data.id.substring(0, 8) + '...' // Log truncated ID for privacy
+      });
       
-      // Show special message for admin user
+      // Only show admin message for the actual admin user
       if (isAdmin) {
         toast({
           title: "Admin Account Created!",
           description: "Welcome! You now have administrator privileges.",
           duration: 5000,
         });
+      } else {
+        toast({
+          title: "Account Created Successfully!",
+          description: "Welcome! Your profile has been set up.",
+          duration: 3000,
+        });
       }
       
       return data;
     } catch (error) {
       console.error('Exception in createUserProfile:', error);
-      throw error; // Re-throw to handle upstream
+      throw error;
     }
   };
 
