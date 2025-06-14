@@ -29,6 +29,42 @@ const SupportCenter = () => {
     setContactForm({ name: '', email: '', subject: '', message: '' });
   };
 
+  const handleSupportAction = (action: string) => {
+    switch (action) {
+      case 'Start Chat':
+        toast({
+          title: "Starting Live Chat",
+          description: "Connecting you to our support team...",
+        });
+        // In a real app, this would open a live chat widget
+        break;
+      case 'Call Now':
+        window.open('tel:+919876543210', '_self');
+        toast({
+          title: "Calling Support",
+          description: "Opening phone dialer...",
+        });
+        break;
+      case 'Send Email':
+        window.open('mailto:support@clarcatalyst.com?subject=Support Request', '_blank');
+        toast({
+          title: "Opening Email",
+          description: "Your email client will open shortly...",
+        });
+        break;
+      case 'View Docs':
+        // In a real app, this would navigate to documentation
+        toast({
+          title: "Documentation",
+          description: "Opening documentation in new tab...",
+        });
+        window.open('#', '_blank'); // Replace with actual docs URL
+        break;
+      default:
+        break;
+    }
+  };
+
   const faqItems = [
     {
       question: "How do I complete a task?",
@@ -110,7 +146,12 @@ const SupportCenter = () => {
                       <h3 className="font-semibold">{option.title}</h3>
                       <p className="text-sm text-gray-600">{option.description}</p>
                     </div>
-                    <Button variant="outline">{option.action}</Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => handleSupportAction(option.action)}
+                    >
+                      {option.action}
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
