@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Settings, Users, Shield, Eye, Database, Activity } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useSimpleAuth';
 import { useNavigate } from 'react-router-dom';
 
 interface AdminOverlayProps {
@@ -14,10 +14,10 @@ interface AdminOverlayProps {
 }
 
 const AdminOverlay = ({ isVisible, onToggle }: AdminOverlayProps) => {
-  const { userProfile } = useAuth();
+  const { isAdmin } = useAuth();
   const navigate = useNavigate();
 
-  if (!userProfile || userProfile.role !== 'admin') {
+  if (!isAdmin) {
     return null;
   }
 

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,27 +7,27 @@ import Navigation from '@/components/Navigation';
 import Header from '@/components/Header';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useSimpleAuth';
 import { supabase } from '@/integrations/supabase/client';
 import AppLayout from '@/components/layouts/AppLayout';
 
 const Workspace = () => {
   const [totalEarnings, setTotalEarnings] = useState(0);
-  const { userProfile, isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (userProfile) {
+    if (user) {
       fetchTotalEarnings();
     }
-  }, [userProfile]);
+  }, [user]);
 
   const fetchTotalEarnings = async () => {
     try {
       const { data, error } = await supabase
         .from('earnings')
         .select('amount')
-        .eq('user_id', userProfile?.id?.toString());
+        .eq('user_id', user?.id);
 
       if (error) throw error;
 

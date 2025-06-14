@@ -1,7 +1,7 @@
 
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useSimpleAuth';
 import { AlertCircle } from 'lucide-react';
 
 interface AdminRouteProps {
@@ -9,12 +9,12 @@ interface AdminRouteProps {
 }
 
 const AdminRoute = ({ children }: AdminRouteProps) => {
-  const { user, userProfile, loading, isAdmin } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!loading) {
-      if (!user || !userProfile) {
+      if (!user) {
         console.log('No user found, redirecting to login');
         navigate('/');
         return;
@@ -26,7 +26,7 @@ const AdminRoute = ({ children }: AdminRouteProps) => {
         return;
       }
     }
-  }, [user, userProfile, loading, isAdmin, navigate]);
+  }, [user, loading, isAdmin, navigate]);
 
   if (loading) {
     return (
@@ -39,7 +39,7 @@ const AdminRoute = ({ children }: AdminRouteProps) => {
     );
   }
 
-  if (!user || !userProfile) {
+  if (!user) {
     return null;
   }
 

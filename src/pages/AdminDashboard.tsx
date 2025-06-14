@@ -7,7 +7,7 @@ import Navigation from '@/components/Navigation';
 import Header from '@/components/Header';
 import AdminRoute from '@/components/AdminRoute';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useSimpleAuth';
 import AppLayout from '@/components/layouts/AppLayout';
 
 const AdminDashboard = () => {
@@ -19,13 +19,13 @@ const AdminDashboard = () => {
     activeUsers: 0
   });
   const [loading, setLoading] = useState(true);
-  const { userProfile } = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (userProfile) {
+    if (user) {
       fetchStats();
     }
-  }, [userProfile]);
+  }, [user]);
 
   const fetchStats = async () => {
     try {
@@ -179,7 +179,7 @@ const AdminDashboard = () => {
                 <h2 className="text-xl font-semibold text-gray-900">System Overview</h2>
               </div>
               <p className="text-sm text-gray-600">
-                Admin ID: {userProfile?.id?.substring(0, 8)}... | Full System Access
+                Admin ID: {user?.id?.substring(0, 8)}... | Full System Access
               </p>
             </div>
 

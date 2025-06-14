@@ -2,12 +2,12 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Home, CheckSquare, Trophy, Users, BarChart3, Shield } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useSimpleAuth';
 
 const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAdmin, userProfile } = useAuth();
+  const { isAdmin, user } = useAuth();
 
   const userNavItems = [
     { icon: Home, label: 'Home', path: '/workspace' },
@@ -25,8 +25,8 @@ const Navigation = () => {
     { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' }
   ];
 
-  // Only show admin navigation if user is confirmed admin with proper profile
-  const shouldShowAdminNav = isAdmin && userProfile && userProfile.role === 'admin';
+  // Show admin navigation if user is admin
+  const shouldShowAdminNav = isAdmin && user;
   const navItems = shouldShowAdminNav ? adminNavItems : userNavItems;
 
   return (

@@ -2,16 +2,16 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Shield } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useSimpleAuth';
 
 interface AdminFloatingButtonProps {
   onClick: () => void;
 }
 
 const AdminFloatingButton = ({ onClick }: AdminFloatingButtonProps) => {
-  const { userProfile } = useAuth();
+  const { isAdmin } = useAuth();
 
-  if (!userProfile || userProfile.role !== 'admin') {
+  if (!isAdmin) {
     return null;
   }
 

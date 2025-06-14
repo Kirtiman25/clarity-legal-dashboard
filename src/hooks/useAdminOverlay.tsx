@@ -1,15 +1,15 @@
 
 import { useState, useEffect } from 'react';
-import { useAuth } from './useAuth';
+import { useAuth } from './useSimpleAuth';
 
 export const useAdminOverlay = () => {
   const [isVisible, setIsVisible] = useState(false);
-  const { userProfile } = useAuth();
+  const { isAdmin } = useAuth();
 
   // Toggle overlay with keyboard shortcut (Ctrl/Cmd + Shift + A)
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
-      if (userProfile?.role === 'admin' && 
+      if (isAdmin && 
           (event.ctrlKey || event.metaKey) && 
           event.shiftKey && 
           event.key === 'A') {
@@ -20,10 +20,10 @@ export const useAdminOverlay = () => {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [userProfile]);
+  }, [isAdmin]);
 
   const toggleOverlay = () => {
-    if (userProfile?.role === 'admin') {
+    if (isAdmin) {
       setIsVisible(prev => !prev);
     }
   };
@@ -31,6 +31,6 @@ export const useAdminOverlay = () => {
   return {
     isVisible,
     toggleOverlay,
-    isAdmin: userProfile?.role === 'admin'
+    isAdmin
   };
 };
