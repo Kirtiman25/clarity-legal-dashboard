@@ -21,11 +21,10 @@ const SignIn = () => {
   });
   const [error, setError] = useState('');
 
-  // Redirect if already authenticated
+  // Handle redirect for authenticated users
   useEffect(() => {
     if (user && !authLoading) {
       console.log('SignIn: User authenticated, redirecting');
-      
       if (isAdmin || user.email_confirmed_at) {
         navigate('/workspace', { replace: true });
       } else {
@@ -36,25 +35,20 @@ const SignIn = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('SignIn: Form submitted');
     setError('');
     
-    if (!formData.email.trim() || !formData.password) {
-      setError('Please fill in all fields');
-      return;
-    }
+    console.log('SignIn: Form submitted for:', formData.email);
     
     try {
-      console.log('SignIn: Attempting sign in for:', formData.email);
       await signIn(formData.email, formData.password);
-      // Navigation will be handled by the useEffect above
+      // Navigation handled by useEffect above
     } catch (error: any) {
-      console.error('SignIn: Sign in error:', error);
+      console.error('SignIn: Error:', error);
       setError(error.message || 'Failed to sign in');
     }
   };
 
-  // Show loading only during initial auth check
+  // Show loading during auth check
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -66,7 +60,7 @@ const SignIn = () => {
     );
   }
 
-  // Don't render the form if user is already authenticated
+  // Don't show form if already authenticated
   if (user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -116,7 +110,6 @@ const SignIn = () => {
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
                 required
                 className="h-12"
-                disabled={isSubmitting}
                 autoComplete="email"
               />
             </div>
@@ -132,7 +125,6 @@ const SignIn = () => {
                   onChange={(e) => setFormData({...formData, password: e.target.value})}
                   required
                   className="h-12 pr-10"
-                  disabled={isSubmitting}
                   autoComplete="current-password"
                 />
                 <Button
@@ -141,7 +133,6 @@ const SignIn = () => {
                   size="sm"
                   className="absolute right-0 top-0 h-12 px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
-                  disabled={isSubmitting}
                   tabIndex={-1}
                 >
                   {showPassword ? (

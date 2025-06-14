@@ -19,24 +19,21 @@ const Header = ({ title }: HeaderProps) => {
   const handleLogout = async () => {
     if (isLoggingOut) return;
     
+    setIsLoggingOut(true);
+    console.log('Header: Starting logout');
+    
     try {
-      setIsLoggingOut(true);
-      console.log('Header: Starting logout process');
-      
-      // Simple logout without complex state management
       await signOut();
+      console.log('Header: Logout completed');
       
-      console.log('Header: Logout completed, redirecting');
-      
-      // Clear any remaining state and redirect
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 100);
-      
+      // Simple redirect
+      navigate('/', { replace: true });
     } catch (error) {
       console.error('Header: Logout error:', error);
-      // Force navigation even if signout fails
-      window.location.href = '/';
+      // Force redirect even on error
+      navigate('/', { replace: true });
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -48,10 +45,8 @@ const Header = ({ title }: HeaderProps) => {
     { icon: BarChart3, label: 'Tracker', path: '/tracker' }
   ];
 
-  // Don't render if no user at all
   if (!user) return null;
 
-  // Use userProfile if available, otherwise fall back to user data
   const displayName = userProfile?.full_name || user.email?.split('@')[0] || 'User';
   const displayEmail = userProfile?.email || user.email || '';
 
