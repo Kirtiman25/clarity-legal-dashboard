@@ -1,12 +1,8 @@
 
 import { useState } from 'react';
 import { useAuth } from './useAuth';
-import { signUpSchema, sanitizeText, createRateLimiter } from '@/lib/validation';
+import { signUpSchema, sanitizeText } from '@/lib/validation';
 import { toast } from '@/hooks/use-toast';
-
-// Rate limiters for auth operations
-const signInRateLimit = createRateLimiter(5, 15 * 60 * 1000); // 5 attempts per 15 minutes
-const signUpRateLimit = createRateLimiter(3, 60 * 60 * 1000); // 3 attempts per hour
 
 export function useSecureAuth() {
   const { signUp: originalSignUp, signIn: originalSignIn } = useAuth();
@@ -14,16 +10,6 @@ export function useSecureAuth() {
 
   const signUp = async (email: string, password: string, fullName: string, referralCode?: string) => {
     if (isSubmitting) return;
-
-    // Rate limiting
-    if (!signUpRateLimit(email)) {
-      toast({
-        title: "Rate Limit Exceeded",
-        description: "Too many signup attempts. Please try again later.",
-        variant: "destructive",
-      });
-      throw new Error('Rate limit exceeded');
-    }
 
     // Validate input
     const validation = signUpSchema.safeParse({
@@ -59,29 +45,30 @@ export function useSecureAuth() {
   const signIn = async (email: string, password: string) => {
     if (isSubmitting) return;
 
-    // Rate limiting
-    if (!signInRateLimit(email)) {
+    // Simple validation - no rate limiting to avoid blocking legitimate requests
+    if (!email?.trim() || !password) {
+      const error = new Error('Email and password are required');
       toast({
-        title: "Rate Limit Exceeded",
-        description: "Too many login attempts. Please try again in 15 minutes.",
+        title: "Sign In Error",
+        description: error.message,
         variant: "destructive",
       });
-      throw new Error('Rate limit exceeded');
-    }
-
-    // Basic validation for sign in (less strict than signup)
-    if (!email || !password) {
-      throw new Error('Email and password are required');
+      throw error;
     }
 
     const cleanEmail = email.toLowerCase().trim();
+    console.log('useSecureAuth: Starting sign in for:', cleanEmail);
 
     setIsSubmitting(true);
     try {
       await originalSignIn(cleanEmail, password);
-    } finally {
+      console.log('useSecureAuth: Sign in completed successfully');
+    } catch (error: any) {
+      console.error('useSecureAuth: Sign in failed:', error);
       setIsSubmitting(false);
+      throw error;
     }
+    // Don't set isSubmitting to false here - let auth state change handle it
   };
 
   return {

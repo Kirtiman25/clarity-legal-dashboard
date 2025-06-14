@@ -36,9 +36,10 @@ const SignIn = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('SignIn: Form submitted');
     setError('');
     
-    if (!formData.email || !formData.password) {
+    if (!formData.email.trim() || !formData.password) {
       setError('Please fill in all fields');
       return;
     }

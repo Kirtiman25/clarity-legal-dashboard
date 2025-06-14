@@ -36,11 +36,11 @@ export function useAuthState() {
     
     const initializeAuthState = async () => {
       try {
-        console.log('Initializing authentication...');
+        console.log('useAuthState: Initializing authentication...');
         
         // Set up auth state listener first
         const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
-          console.log('Auth state changed:', event, session?.user?.email || 'No session');
+          console.log('useAuthState: Auth state changed:', event, session?.user?.email || 'No session');
           if (mounted) {
             await handleAuthStateChange(event, session, mounted);
           }
@@ -52,30 +52,28 @@ export function useAuthState() {
         
         if (mounted) {
           if (session?.user) {
-            console.log('Session found for user:', session.user.email);
+            console.log('useAuthState: Session found for user:', session.user.email);
             setUser(session.user);
-            
-            // Set loading to false immediately for better UX
             setLoading(false);
             setInitialized(true);
             
-            // Process profile in background only for confirmed users or admins
+            // Process profile in background
             if (session.user.email_confirmed_at || session.user.email === 'uttamkumar30369@gmail.com') {
               try {
                 const profile = await handleUserProfile(session.user);
                 if (mounted) {
                   setUserProfile(profile);
-                  console.log('Profile loaded successfully:', profile?.email);
+                  console.log('useAuthState: Profile loaded successfully:', profile?.email);
                 }
               } catch (error) {
-                console.error('Profile processing error:', error);
+                console.error('useAuthState: Profile processing error:', error);
                 if (mounted) {
                   setUserProfile(null);
                 }
               }
             }
           } else {
-            console.log('No session found');
+            console.log('useAuthState: No session found');
             setUser(null);
             setUserProfile(null);
             setLoading(false);
@@ -83,7 +81,7 @@ export function useAuthState() {
           }
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
+        console.error('useAuthState: Auth initialization error:', error);
         if (mounted) {
           setUser(null);
           setUserProfile(null);
@@ -94,7 +92,6 @@ export function useAuthState() {
       }
     };
 
-    // Initialize immediately
     initializeAuthState();
 
     return () => {
@@ -103,7 +100,7 @@ export function useAuthState() {
         subscription.unsubscribe();
       }
     };
-  }, [initialized]); // Only depend on initialized to prevent loops
+  }, [initialized]);
 
   return {
     user,

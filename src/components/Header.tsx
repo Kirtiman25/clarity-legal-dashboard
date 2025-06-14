@@ -17,18 +17,18 @@ const Header = ({ title }: HeaderProps) => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
-    if (isLoggingOut) return; // Prevent multiple logout attempts
+    if (isLoggingOut) return;
     
     try {
       setIsLoggingOut(true);
       console.log('Header: Starting logout process');
       
+      // Simple logout without complex state management
       await signOut();
       
-      console.log('Header: Logout completed, redirecting to home');
-      navigate('/', { replace: true });
+      console.log('Header: Logout completed, redirecting');
       
-      // Force page refresh to clear any remaining state
+      // Clear any remaining state and redirect
       setTimeout(() => {
         window.location.href = '/';
       }, 100);
@@ -37,8 +37,6 @@ const Header = ({ title }: HeaderProps) => {
       console.error('Header: Logout error:', error);
       // Force navigation even if signout fails
       window.location.href = '/';
-    } finally {
-      setIsLoggingOut(false);
     }
   };
 
