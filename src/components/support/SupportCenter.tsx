@@ -6,8 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { MessageSquare, Phone, Mail, FileText, HelpCircle } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MessageSquare, Phone, Mail, FileText, HelpCircle, BarChart3 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import SupportAnalytics from './SupportAnalytics';
 
 const SupportCenter = () => {
   const [contactForm, setContactForm] = useState({
@@ -88,100 +90,113 @@ const SupportCenter = () => {
         <p className="text-gray-600 mt-2">We're here to help you succeed</p>
       </div>
 
-      {/* Support Options */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {supportOptions.map((option, index) => (
-          <Card key={index} className="cursor-pointer hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                <div className={`${option.color} p-3 rounded-lg`}>
-                  <option.icon className="h-6 w-6 text-white" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold">{option.title}</h3>
-                  <p className="text-sm text-gray-600">{option.description}</p>
-                </div>
-                <Button variant="outline">{option.action}</Button>
-              </div>
+      <Tabs defaultValue="support" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="support">Support</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="support" className="space-y-6">
+          {/* Support Options */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {supportOptions.map((option, index) => (
+              <Card key={index} className="cursor-pointer hover:shadow-lg transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-4">
+                    <div className={`${option.color} p-3 rounded-lg`}>
+                      <option.icon className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold">{option.title}</h3>
+                      <p className="text-sm text-gray-600">{option.description}</p>
+                    </div>
+                    <Button variant="outline">{option.action}</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* FAQ Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <HelpCircle className="h-5 w-5" />
+                <span>Frequently Asked Questions</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="single" collapsible className="w-full">
+                {faqItems.map((item, index) => (
+                  <AccordionItem key={index} value={`item-${index}`}>
+                    <AccordionTrigger>{item.question}</AccordionTrigger>
+                    <AccordionContent>{item.answer}</AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
             </CardContent>
           </Card>
-        ))}
-      </div>
 
-      {/* FAQ Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <HelpCircle className="h-5 w-5" />
-            <span>Frequently Asked Questions</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Accordion type="single" collapsible className="w-full">
-            {faqItems.map((item, index) => (
-              <AccordionItem key={index} value={`item-${index}`}>
-                <AccordionTrigger>{item.question}</AccordionTrigger>
-                <AccordionContent>{item.answer}</AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </CardContent>
-      </Card>
-
-      {/* Contact Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Contact Us</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleContactSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  value={contactForm.name}
-                  onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={contactForm.email}
-                  onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
-                  required
-                />
-              </div>
-            </div>
-            
-            <div>
-              <Label htmlFor="subject">Subject</Label>
-              <Input
-                id="subject"
-                value={contactForm.subject}
-                onChange={(e) => setContactForm({ ...contactForm, subject: e.target.value })}
-                required
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="message">Message</Label>
-              <Textarea
-                id="message"
-                rows={4}
-                value={contactForm.message}
-                onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
-                required
-              />
-            </div>
-            
-            <Button type="submit" className="w-full">Send Message</Button>
-          </form>
-        </CardContent>
-      </Card>
+          {/* Contact Form */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Contact Us</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleContactSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="name">Name</Label>
+                    <Input
+                      id="name"
+                      value={contactForm.name}
+                      onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={contactForm.email}
+                      onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <Label htmlFor="subject">Subject</Label>
+                  <Input
+                    id="subject"
+                    value={contactForm.subject}
+                    onChange={(e) => setContactForm({ ...contactForm, subject: e.target.value })}
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="message">Message</Label>
+                  <Textarea
+                    id="message"
+                    rows={4}
+                    value={contactForm.message}
+                    onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+                    required
+                  />
+                </div>
+                
+                <Button type="submit" className="w-full">Send Message</Button>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="analytics">
+          <SupportAnalytics />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
