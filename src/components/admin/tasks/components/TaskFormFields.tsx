@@ -75,7 +75,7 @@ export const TaskFormFields = ({ formData, setFormData, users, editingTask }: Ta
           id="client-name"
           value={formData.client_name}
           onChange={(e) => setFormData({ ...formData, client_name: e.target.value })}
-          placeholder="e.g., ABC Corporation"
+          placeholder="Enter your company"
         />
       </div>
 
