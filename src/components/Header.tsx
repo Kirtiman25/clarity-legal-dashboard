@@ -48,15 +48,18 @@ const Header = ({ title }: HeaderProps) => {
   return (
     <div className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 shadow-sm z-50">
       <div className="flex items-center justify-between px-4 py-3">
-        <div className="flex items-center space-x-3">
+        {/* Logo Section - Separate from title */}
+        <div className="flex items-center space-x-4">
           <img 
             src="/lovable-uploads/fa1e0532-ff2a-474a-a3c6-ce13d2cbb813.png" 
             alt="Clar Catalyst Logo" 
-            className="h-20 w-auto"
+            className="h-12 w-auto"
           />
-          <h1 className="text-xl font-bold text-gray-900">{title}</h1>
+          <div className="h-8 w-px bg-gray-300"></div>
+          <h1 className="text-lg font-bold text-gray-900">{title}</h1>
         </div>
         
+        {/* Profile Section - Separate */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">

@@ -95,10 +95,10 @@ const Workspace = () => {
         <div className="min-h-screen bg-gray-50">
           <Header title="Workspace" />
           
-          <div className="container mx-auto px-4 pt-20 pb-24">
+          <div className="container mx-auto px-4 pt-24 pb-24">
             {/* Admin Badge */}
             {isAdmin && (
-              <div className="mb-4">
+              <div className="mb-6">
                 <Badge variant="secondary" className="bg-red-100 text-red-800">
                   <Shield className="h-3 w-3 mr-1" />
                   Administrator
@@ -109,7 +109,7 @@ const Workspace = () => {
               </div>
             )}
 
-            <Card className="mb-6 bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg">
+            <Card className="mb-8 bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg font-medium opacity-90">
                   {isAdmin ? 'Admin Access' : 'Total Earnings'}

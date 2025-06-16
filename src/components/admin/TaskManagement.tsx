@@ -73,12 +73,12 @@ const TaskManagement = () => {
   }
 
   return (
-    <div className="space-y-6 p-4">
+    <div className="space-y-6 p-4 pt-8">
       <div className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
         <h2 className="text-2xl font-bold text-gray-900">Task Management</h2>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-md shadow-md flex items-center gap-2">
+            <Button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-md shadow-md flex items-center gap-2 mt-2">
               <Plus className="h-4 w-4" />
               Create Task
             </Button>
