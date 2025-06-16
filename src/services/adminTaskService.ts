@@ -88,12 +88,19 @@ export const updateTask = async (taskId: string, updates: Partial<Task>) => {
 
 export const deleteTask = async (taskId: string) => {
   try {
+    console.log('Deleting task with ID:', taskId);
+    
     const { error } = await supabase
       .from('tasks')
       .delete()
       .eq('id', taskId);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Delete error:', error);
+      throw error;
+    }
+
+    console.log('Task deleted successfully:', taskId);
 
     toast({
       title: "Success",
@@ -103,7 +110,7 @@ export const deleteTask = async (taskId: string) => {
     console.error('Error deleting task:', error);
     toast({
       title: "Error",
-      description: "Failed to delete task",
+      description: error instanceof Error ? error.message : "Failed to delete task",
       variant: "destructive",
     });
     throw error;
@@ -112,6 +119,8 @@ export const deleteTask = async (taskId: string) => {
 
 export const fetchAllTasks = async (): Promise<Task[]> => {
   try {
+    console.log('Fetching all tasks...');
+    
     const { data, error } = await supabase
       .from('tasks')
       .select('*')
@@ -122,7 +131,7 @@ export const fetchAllTasks = async (): Promise<Task[]> => {
       throw error;
     }
     
-    console.log('Fetched tasks:', data?.length || 0);
+    console.log('Fetched tasks:', data?.length || 0, 'tasks');
     return data || [];
   } catch (error) {
     console.error('Error fetching all tasks:', error);

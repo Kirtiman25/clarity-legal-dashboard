@@ -20,17 +20,32 @@ const TaskManagement = () => {
 
   const loadTasks = async () => {
     setLoading(true);
-    const allTasks = await fetchAllTasks();
-    setTasks(allTasks);
-    setLoading(false);
+    try {
+      const allTasks = await fetchAllTasks();
+      setTasks(allTasks);
+    } catch (error) {
+      console.error('Error loading tasks:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDeleteTask = async (taskId: string) => {
     try {
+      console.log('TaskManagement: Deleting task', taskId);
       await deleteTask(taskId);
-      loadTasks();
+      
+      // Immediately remove from local state for better UX
+      setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+      
+      // Also reload from server to ensure consistency
+      setTimeout(() => {
+        loadTasks();
+      }, 500);
     } catch (error) {
       console.error('Error deleting task:', error);
+      // Reload tasks in case of error to show current state
+      loadTasks();
     }
   };
 
@@ -40,6 +55,12 @@ const TaskManagement = () => {
 
   const closeEditDialog = () => {
     setEditingTask(null);
+  };
+
+  const handleTaskSuccess = () => {
+    loadTasks();
+    setIsCreateDialogOpen(false);
+    closeEditDialog();
   };
 
   if (loading) {
@@ -70,25 +91,31 @@ const TaskManagement = () => {
           <CardTitle>All Tasks ({tasks.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <TaskTable 
-            tasks={tasks}
-            onEdit={openEditDialog}
-            onDelete={handleDeleteTask}
-          />
+          {tasks.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500">No tasks found. Create your first task to get started.</p>
+            </div>
+          ) : (
+            <TaskTable 
+              tasks={tasks}
+              onEdit={openEditDialog}
+              onDelete={handleDeleteTask}
+            />
+          )}
         </CardContent>
       </Card>
 
       <TaskForm
         isOpen={isCreateDialogOpen}
         onClose={() => setIsCreateDialogOpen(false)}
-        onSuccess={loadTasks}
+        onSuccess={handleTaskSuccess}
       />
 
       <TaskForm
         isOpen={!!editingTask}
         onClose={closeEditDialog}
         editingTask={editingTask}
-        onSuccess={loadTasks}
+        onSuccess={handleTaskSuccess}
       />
     </div>
   );
