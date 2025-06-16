@@ -27,19 +27,38 @@ export const TaskForm = ({ isOpen, onClose, editingTask, onSuccess }: TaskFormPr
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    title: editingTask?.title || '',
-    task_type: editingTask?.task_type || 'pending_payment',
-    client_name: editingTask?.client_name || '',
-    case_name: editingTask?.case_name || '',
-    invoice_amount: editingTask?.invoice_amount || '',
-    instructions: editingTask?.admin_note || '',
-    user_email: ''
+    title: '',
+    task_type: 'submit_documents',
+    client_name: 'ABC Corporation',
+    case_name: 'Contract Review',
+    user_email: 'john@example.com',
+    instructions: 'Upload signed contract and ID proof'
   });
 
-  // Load users when component mounts
+  // Reset form when opening for new task or load existing task data
   useEffect(() => {
-    if (isOpen && !editingTask) {
-      loadUsers();
+    if (isOpen) {
+      if (editingTask) {
+        setFormData({
+          title: editingTask.title || '',
+          task_type: editingTask.task_type || 'submit_documents',
+          client_name: editingTask.client_name || '',
+          case_name: editingTask.case_name || '',
+          user_email: '',
+          instructions: editingTask.admin_note || ''
+        });
+      } else {
+        // Reset to default values for new task
+        setFormData({
+          title: '',
+          task_type: 'submit_documents',
+          client_name: 'ABC Corporation',
+          case_name: 'Contract Review',
+          user_email: 'john@example.com',
+          instructions: 'Upload signed contract and ID proof'
+        });
+        loadUsers();
+      }
     }
   }, [isOpen, editingTask]);
 
@@ -107,7 +126,6 @@ export const TaskForm = ({ isOpen, onClose, editingTask, onSuccess }: TaskFormPr
         task_type: formData.task_type,
         client_name: formData.client_name || null,
         case_name: formData.case_name || null,
-        invoice_amount: formData.invoice_amount || null,
         admin_note: formData.instructions || null,
         user_id: user_id!
       };
@@ -119,23 +137,9 @@ export const TaskForm = ({ isOpen, onClose, editingTask, onSuccess }: TaskFormPr
       }
       
       onClose();
-      setFormData({
-        title: '',
-        task_type: 'pending_payment',
-        client_name: '',
-        case_name: '',
-        invoice_amount: '',
-        instructions: '',
-        user_email: ''
-      });
       onSuccess();
     } catch (error) {
       console.error('Error saving task:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save task",
-        variant: "destructive",
-      });
     } finally {
       setLoading(false);
     }
@@ -154,90 +158,75 @@ export const TaskForm = ({ isOpen, onClose, editingTask, onSuccess }: TaskFormPr
               id="title"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              placeholder="e.g., Submit signed contract documents"
+              placeholder="Enter task title"
             />
           </div>
           
+          <div>
+            <Label htmlFor="task-type">Task Type *</Label>
+            <Select value={formData.task_type} onValueChange={(value) => setFormData({ ...formData, task_type: value })}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="submit_documents">Submit Documents</SelectItem>
+                <SelectItem value="pending_payment">Pending Payment</SelectItem>
+                <SelectItem value="follow_up">Follow Up</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {!editingTask && (
-            <>
-              <div>
-                <Label htmlFor="task-type">Task Type *</Label>
-                <Select value={formData.task_type} onValueChange={(value) => setFormData({ ...formData, task_type: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending_payment">Pending Payment</SelectItem>
-                    <SelectItem value="submit_documents">Submit Documents</SelectItem>
-                    <SelectItem value="follow_up">Follow Up</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="user-email">Assign to User *</Label>
-                <Select value={formData.user_email} onValueChange={(value) => setFormData({ ...formData, user_email: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select user..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {users.map((user) => (
-                      <SelectItem key={user.id} value={user.email}>
-                        {user.full_name} ({user.email})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="client-name">Client Name</Label>
-                <Input
-                  id="client-name"
-                  value={formData.client_name}
-                  onChange={(e) => setFormData({ ...formData, client_name: e.target.value })}
-                  placeholder="e.g., ABC Corporation"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="case-name">Case Name</Label>
-                <Input
-                  id="case-name"
-                  value={formData.case_name}
-                  onChange={(e) => setFormData({ ...formData, case_name: e.target.value })}
-                  placeholder="e.g., Contract Review"
-                />
-              </div>
-
-              {formData.task_type === 'pending_payment' && (
-                <div>
-                  <Label htmlFor="invoice-amount">Invoice Amount (₹)</Label>
-                  <Input
-                    id="invoice-amount"
-                    value={formData.invoice_amount}
-                    onChange={(e) => setFormData({ ...formData, invoice_amount: e.target.value })}
-                    placeholder="e.g., 50000"
-                    type="number"
-                  />
-                </div>
-              )}
-            </>
+            <div>
+              <Label htmlFor="user-email">User *</Label>
+              <Select value={formData.user_email} onValueChange={(value) => setFormData({ ...formData, user_email: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select user..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {users.map((user) => (
+                    <SelectItem key={user.id} value={user.email}>
+                      {user.full_name} ({user.email})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           )}
 
           <div>
-            <Label htmlFor="instructions">Instructions for User</Label>
+            <Label htmlFor="client-name">Client</Label>
+            <Input
+              id="client-name"
+              value={formData.client_name}
+              onChange={(e) => setFormData({ ...formData, client_name: e.target.value })}
+              placeholder="e.g., ABC Corporation"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="case-name">Case</Label>
+            <Input
+              id="case-name"
+              value={formData.case_name}
+              onChange={(e) => setFormData({ ...formData, case_name: e.target.value })}
+              placeholder="e.g., Contract Review"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="instructions">Instructions</Label>
             <Textarea
               id="instructions"
               value={formData.instructions}
               onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
-              placeholder="e.g., Upload signed contract and ID proof. Ensure all pages are clearly visible."
+              placeholder="e.g., Upload signed contract and ID proof"
               rows={3}
             />
           </div>
 
           <Button onClick={handleSubmit} className="w-full" disabled={loading}>
-            {loading ? 'Creating...' : (editingTask ? 'Update Task' : 'Create Task')}
+            {loading ? 'Submitting...' : (editingTask ? 'Update Task' : 'Submit')}
           </Button>
         </div>
       </DialogContent>
