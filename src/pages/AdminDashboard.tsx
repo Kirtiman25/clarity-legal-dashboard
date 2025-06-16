@@ -9,6 +9,7 @@ import AdminRoute from '@/components/AdminRoute';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useSimpleAuth';
 import AppLayout from '@/components/layouts/AppLayout';
+import { useNavigate } from 'react-router-dom';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -20,6 +21,7 @@ const AdminDashboard = () => {
   });
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user) {
@@ -209,7 +211,7 @@ const AdminDashboard = () => {
                 <Card 
                   key={index} 
                   className="cursor-pointer hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1"
-                  onClick={() => console.log(`Navigate to ${action.route}`)}
+                  onClick={() => navigate(action.route)}
                 >
                   <CardContent className="flex items-center p-4">
                     <div className={`${action.color} p-3 rounded-lg mr-4`}>

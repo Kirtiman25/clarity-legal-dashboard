@@ -20,7 +20,7 @@ const Navigation = () => {
   const adminNavItems = [
     { icon: Home, label: 'Home', path: '/workspace' },
     { icon: Shield, label: 'Admin', path: '/admin/dashboard' },
-    { icon: CheckSquare, label: 'Tasks', path: '/tasks' },
+    { icon: CheckSquare, label: 'Tasks', path: '/admin/tasks' },
     { icon: Users, label: 'Users', path: '/admin/users' },
     { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' }
   ];
