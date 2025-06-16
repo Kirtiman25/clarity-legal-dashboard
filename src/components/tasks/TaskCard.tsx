@@ -107,7 +107,7 @@ const TaskCard = ({ task, onClick }: TaskCardProps) => {
           </div>
           {task.invoice_amount && task.task_type === 'pending_payment' && (
             <div className="text-green-600 font-semibold">
-              ₹{getStringValue(task.invoice_amount)}
+              {getStringValue(task.invoice_amount)}
             </div>
           )}
         </div>

@@ -74,11 +74,11 @@ const TaskManagement = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-2xl font-bold">Task Management</h2>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Create Task
             </Button>
