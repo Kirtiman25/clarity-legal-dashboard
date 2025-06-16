@@ -14,6 +14,7 @@ import Index from "./pages/Index";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import Workspace from "./pages/Workspace";
+import Tasks from "./pages/Tasks";
 import ReferEarn from "./pages/ReferEarn";
 import AchieveEarn from "./pages/AchieveEarn";
 import Support from "./pages/Support";
@@ -48,6 +49,13 @@ const App = () => (
               <ProtectedRoute>
                 <AppLayout>
                   <Workspace />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/tasks" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <Tasks />
                 </AppLayout>
               </ProtectedRoute>
             } />
