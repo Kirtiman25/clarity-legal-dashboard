@@ -7,6 +7,8 @@ export type Task = Tables<'tasks'>;
 
 export const createTask = async (taskData: Partial<Task>) => {
   try {
+    console.log('Creating task with data:', taskData);
+
     // Ensure required fields are present
     if (!taskData.title || !taskData.user_id || !taskData.task_type) {
       throw new Error('Title, user_id, and task_type are required');
@@ -27,11 +29,16 @@ export const createTask = async (taskData: Partial<Task>) => {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase error:', error);
+      throw error;
+    }
+
+    console.log('Task created successfully:', data);
 
     toast({
       title: "Success",
-      description: "Task created successfully",
+      description: `Task "${taskData.title}" created and assigned successfully`,
     });
 
     return data;
@@ -39,7 +46,7 @@ export const createTask = async (taskData: Partial<Task>) => {
     console.error('Error creating task:', error);
     toast({
       title: "Error",
-      description: "Failed to create task",
+      description: error instanceof Error ? error.message : "Failed to create task",
       variant: "destructive",
     });
     throw error;
@@ -48,6 +55,8 @@ export const createTask = async (taskData: Partial<Task>) => {
 
 export const updateTask = async (taskId: string, updates: Partial<Task>) => {
   try {
+    console.log('Updating task:', taskId, 'with:', updates);
+
     const { data, error } = await supabase
       .from('tasks')
       .update(updates)
@@ -55,7 +64,10 @@ export const updateTask = async (taskId: string, updates: Partial<Task>) => {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase error:', error);
+      throw error;
+    }
 
     toast({
       title: "Success",
@@ -67,7 +79,7 @@ export const updateTask = async (taskId: string, updates: Partial<Task>) => {
     console.error('Error updating task:', error);
     toast({
       title: "Error",
-      description: "Failed to update task",
+      description: error instanceof Error ? error.message : "Failed to update task",
       variant: "destructive",
     });
     throw error;
@@ -105,7 +117,12 @@ export const fetchAllTasks = async (): Promise<Task[]> => {
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching tasks:', error);
+      throw error;
+    }
+    
+    console.log('Fetched tasks:', data?.length || 0);
     return data || [];
   } catch (error) {
     console.error('Error fetching all tasks:', error);
