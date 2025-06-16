@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import Header from '@/components/Header';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import TaskList from '@/components/tasks/TaskList';
 import { fetchUserTasks, completeTask, type Task } from '@/services/taskService';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useSimpleAuth';
 
 const Tasks = () => {
   const [tasks, setTasks] = useState<Task[]>([]);

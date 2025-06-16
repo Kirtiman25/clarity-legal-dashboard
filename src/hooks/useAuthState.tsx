@@ -55,7 +55,7 @@ export function useAuthState() {
             setUser(session.user);
             
             // Handle profile for confirmed users or admin
-            if (session.user.email_confirmed_at || session.user.email === 'uttamkumar30369@gmail.com') {
+            if (session.user.email_confirmed_at || session.user.email === 'clarcatalyst123@gmail.com') {
               try {
                 const profile = await handleUserProfile(session.user);
                 if (mounted && profile) {
@@ -94,7 +94,7 @@ export function useAuthState() {
         subscription.unsubscribe();
       }
     };
-  }, [initialized]);
+  }, [initialized, handleConnectionError, handleUserProfile, initializeAuth, handleAuthStateChange, setUser, setUserProfile, setLoading, setInitialized]);
 
   return {
     user,
