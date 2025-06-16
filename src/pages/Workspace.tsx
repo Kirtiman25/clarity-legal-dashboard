@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckSquare, DollarSign, Trophy, Users, Shield, Settings } from 'lucide-react';
+import { CheckSquare, Trophy, Users, Shield, Settings } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Header from '@/components/Header';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -117,7 +117,6 @@ const Workspace = () => {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center space-x-2">
-                  <DollarSign className="h-8 w-8" />
                   <span className="text-3xl font-bold">
                     {isAdmin ? 'Full System Access' : `₹${totalEarnings.toLocaleString()}`}
                   </span>
