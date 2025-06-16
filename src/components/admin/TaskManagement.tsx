@@ -73,22 +73,22 @@ const TaskManagement = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-2xl font-bold">Task Management</h2>
+    <div className="space-y-6 p-4">
+      <div className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
+        <h2 className="text-2xl font-bold text-gray-900">Task Management</h2>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="w-full sm:w-auto">
-              <Plus className="h-4 w-4 mr-2" />
+            <Button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-md shadow-md flex items-center gap-2">
+              <Plus className="h-4 w-4" />
               Create Task
             </Button>
           </DialogTrigger>
         </Dialog>
       </div>
 
-      <Card>
+      <Card className="shadow-sm">
         <CardHeader>
-          <CardTitle>All Tasks ({tasks.length})</CardTitle>
+          <CardTitle className="text-lg font-semibold">All Tasks ({tasks.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {tasks.length === 0 ? (
