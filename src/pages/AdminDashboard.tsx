@@ -3,12 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Users, CheckSquare, DollarSign, AlertCircle, Settings, BarChart3, Shield, Database, Activity } from 'lucide-react';
-import Navigation from '@/components/Navigation';
-import Header from '@/components/Header';
 import AdminRoute from '@/components/AdminRoute';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useSimpleAuth';
-import AppLayout from '@/components/layouts/AppLayout';
+import AdminLayout from '@/components/layouts/AdminLayout';
+import AdminNavigation from '@/components/admin/AdminNavigation';
 import { useNavigate } from 'react-router-dom';
 
 const AdminDashboard = () => {
@@ -149,87 +148,80 @@ const AdminDashboard = () => {
   if (loading) {
     return (
       <AdminRoute>
-        <AppLayout>
-          <div className="min-h-screen bg-gray-50">
-            <Header title="Admin Dashboard" />
-            <div className="container mx-auto px-4 pt-20 pb-24">
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500 mx-auto mb-4"></div>
-                <p className="text-gray-600">Loading dashboard...</p>
-              </div>
+        <AdminLayout title="Dashboard">
+          <div className="container mx-auto px-4 py-12">
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-500 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading dashboard...</p>
             </div>
-            <Navigation />
           </div>
-        </AppLayout>
+          <AdminNavigation />
+        </AdminLayout>
       </AdminRoute>
     );
   }
 
   return (
     <AdminRoute>
-      <AppLayout>
-        <div className="min-h-screen bg-gray-50">
-          <Header title="Admin Dashboard" />
-          
-          <div className="container mx-auto px-4 pt-20 pb-24">
-            <div className="mb-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <Badge variant="secondary" className="bg-red-100 text-red-800">
-                  <Shield className="h-3 w-3 mr-1" />
-                  Admin
-                </Badge>
-                <h2 className="text-xl font-semibold text-gray-900">System Overview</h2>
-              </div>
-              <p className="text-sm text-gray-600">
-                Admin ID: {user?.id?.substring(0, 8)}... | Full System Access
-              </p>
+      <AdminLayout title="Dashboard">
+        <div className="container mx-auto px-4 py-6 pb-24">
+          <div className="mb-6">
+            <div className="flex items-center space-x-2 mb-4">
+              <Badge variant="secondary" className="bg-red-100 text-red-800">
+                <Shield className="h-3 w-3 mr-1" />
+                Admin
+              </Badge>
+              <h2 className="text-xl font-semibold text-gray-900">System Overview</h2>
             </div>
-
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              {statCards.map((stat, index) => (
-                <Card key={index} className="shadow-sm">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-600 mb-1">{stat.title}</p>
-                        <p className={`text-lg font-bold ${stat.textColor}`}>{stat.value}</p>
-                      </div>
-                      <div className={`${stat.color} p-2 rounded-lg`}>
-                        <stat.icon className="h-5 w-5 text-white" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {/* Admin Actions */}
-            <div className="space-y-3">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Admin Actions</h3>
-              {adminActions.map((action, index) => (
-                <Card 
-                  key={index} 
-                  className="cursor-pointer hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1"
-                  onClick={() => navigate(action.route)}
-                >
-                  <CardContent className="flex items-center p-4">
-                    <div className={`${action.color} p-3 rounded-lg mr-4`}>
-                      <action.icon className="h-5 w-5 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900">{action.title}</h4>
-                      <p className="text-sm text-gray-600">{action.description}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <p className="text-sm text-gray-600">
+              Admin ID: {user?.id?.substring(0, 8)}... | Full System Access
+            </p>
           </div>
 
-          <Navigation />
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            {statCards.map((stat, index) => (
+              <Card key={index} className="shadow-sm">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">{stat.title}</p>
+                      <p className={`text-lg font-bold ${stat.textColor}`}>{stat.value}</p>
+                    </div>
+                    <div className={`${stat.color} p-2 rounded-lg`}>
+                      <stat.icon className="h-5 w-5 text-white" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Admin Actions */}
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">Admin Actions</h3>
+            {adminActions.map((action, index) => (
+              <Card 
+                key={index} 
+                className="cursor-pointer hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1"
+                onClick={() => navigate(action.route)}
+              >
+                <CardContent className="flex items-center p-4">
+                  <div className={`${action.color} p-3 rounded-lg mr-4`}>
+                    <action.icon className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900">{action.title}</h4>
+                    <p className="text-sm text-gray-600">{action.description}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
-      </AppLayout>
+
+        <AdminNavigation />
+      </AdminLayout>
     </AdminRoute>
   );
 };

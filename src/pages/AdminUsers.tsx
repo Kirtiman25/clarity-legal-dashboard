@@ -1,24 +1,18 @@
 
-import Navigation from '@/components/Navigation';
-import Header from '@/components/Header';
 import AdminRoute from '@/components/AdminRoute';
 import UserManagement from '@/components/admin/UserManagement';
-import AppLayout from '@/components/layouts/AppLayout';
+import AdminLayout from '@/components/layouts/AdminLayout';
+import AdminNavigation from '@/components/admin/AdminNavigation';
 
 const AdminUsers = () => {
   return (
     <AdminRoute>
-      <AppLayout>
-        <div className="min-h-screen bg-gray-50">
-          <Header title="User Management" />
-          
-          <div className="container mx-auto px-4 pt-20 pb-24">
-            <UserManagement />
-          </div>
-
-          <Navigation />
+      <AdminLayout title="User Management">
+        <div className="container mx-auto px-4 py-6 pb-24">
+          <UserManagement />
         </div>
-      </AppLayout>
+        <AdminNavigation />
+      </AdminLayout>
     </AdminRoute>
   );
 };

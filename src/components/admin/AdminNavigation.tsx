@@ -1,22 +1,22 @@
 
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Home, CheckSquare, Trophy, Users, BarChart3 } from 'lucide-react';
+import { Shield, Users, Settings, BarChart3, Database, Activity, Home } from 'lucide-react';
 
-const Navigation = () => {
+const AdminNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
   const navItems = [
-    { icon: Home, label: 'Home', path: '/workspace' },
-    { icon: CheckSquare, label: 'Tasks', path: '/tasks' },
-    { icon: Trophy, label: 'Achieve', path: '/achieve-earn' },
-    { icon: Users, label: 'Refer', path: '/refer-earn' },
-    { icon: BarChart3, label: 'Tracker', path: '/tracker' }
+    { icon: Shield, label: 'Dashboard', path: '/admin/dashboard' },
+    { icon: Users, label: 'Users', path: '/admin/users' },
+    { icon: Settings, label: 'Tasks', path: '/admin/tasks' },
+    { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },
+    { icon: Home, label: 'User View', path: '/workspace' }
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
+    <div className="fixed bottom-0 left-0 right-0 bg-red-600 border-t border-red-700 shadow-lg">
       <div className="flex justify-around items-center py-2 px-4">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
@@ -28,8 +28,8 @@ const Navigation = () => {
               onClick={() => navigate(item.path)}
               className={`flex flex-col items-center justify-center p-2 h-16 w-16 ${
                 isActive 
-                  ? 'text-blue-600 bg-blue-50' 
-                  : 'text-gray-600 hover:text-blue-600'
+                  ? 'text-white bg-red-700' 
+                  : 'text-red-100 hover:text-white hover:bg-red-700'
               }`}
             >
               <item.icon className="h-5 w-5 mb-1" />
@@ -42,4 +42,4 @@ const Navigation = () => {
   );
 };
 
-export default Navigation;
+export default AdminNavigation;
