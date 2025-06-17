@@ -7,6 +7,7 @@ import Navigation from '@/components/Navigation';
 import Header from '@/components/Header';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useSimpleAuth';
 import { supabase } from '@/integrations/supabase/client';
 import AppLayout from '@/components/layouts/AppLayout';
@@ -21,6 +22,11 @@ const Workspace = () => {
       fetchTotalEarnings();
     }
   }, [user]);
+
+  // Debug logging
+  useEffect(() => {
+    console.log('Workspace - User:', user?.email, 'Is Admin:', isAdmin);
+  }, [user, isAdmin]);
 
   const fetchTotalEarnings = async () => {
     try {
@@ -78,11 +84,11 @@ const Workspace = () => {
       route: '/admin/users'
     },
     {
-      title: 'System Settings',
-      description: 'Configure system settings',
+      title: 'Task Management',
+      description: 'Configure system tasks',
       icon: Settings,
       color: 'bg-gray-500',
-      route: '/admin/settings'
+      route: '/admin/tasks'
     },
     ...userMenuItems
   ];
@@ -96,16 +102,27 @@ const Workspace = () => {
           <Header title="Workspace" />
           
           <div className="container mx-auto px-4 pt-24 pb-24">
-            {/* Admin Badge */}
+            {/* Admin Badge and Quick Access */}
             {isAdmin && (
               <div className="mb-6">
-                <Badge variant="secondary" className="bg-red-100 text-red-800">
-                  <Shield className="h-3 w-3 mr-1" />
-                  Administrator
-                </Badge>
-                <p className="text-xs text-gray-600 mt-1">
-                  Press Ctrl+Shift+A or click the red button to open admin panel
-                </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Badge variant="secondary" className="bg-red-100 text-red-800 mb-2">
+                      <Shield className="h-3 w-3 mr-1" />
+                      Administrator
+                    </Badge>
+                    <p className="text-xs text-gray-600">
+                      You have full system access
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={() => navigate('/admin/dashboard')}
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    <Shield className="h-4 w-4 mr-2" />
+                    Admin Panel
+                  </Button>
+                </div>
               </div>
             )}
 

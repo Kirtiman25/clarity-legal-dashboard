@@ -1,3 +1,4 @@
+
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,7 +19,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Only clarcatalyst123@gmail.com is admin
+  // Strict admin check - only clarcatalyst123@gmail.com is admin
   const isAdmin = user?.email === 'clarcatalyst123@gmail.com';
 
   useEffect(() => {
@@ -29,6 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (mounted) {
+          console.log('Initial session user:', session?.user?.email || 'No user');
           setUser(session?.user || null);
           setLoading(false);
         }
@@ -46,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async (event, session) => {
         if (!mounted) return;
         
-        console.log('Auth event:', event, session?.user?.email || 'No user');
+        console.log('Auth event:', event, 'User:', session?.user?.email || 'No user');
         
         if (event === 'SIGNED_OUT') {
           setUser(null);
@@ -54,6 +56,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           sessionStorage.clear();
         } else {
           setUser(session?.user || null);
+          
+          // Log admin status for debugging
+          if (session?.user?.email === 'clarcatalyst123@gmail.com') {
+            console.log('Admin user detected:', session.user.email);
+          }
         }
         setLoading(false);
       }
@@ -70,6 +77,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
+      console.log('Signing in user:', email);
+      
       const { error } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
         password
@@ -79,10 +88,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(error.message);
       }
 
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully signed in.",
-      });
+      // Check if this is the admin user
+      if (email.trim().toLowerCase() === 'clarcatalyst123@gmail.com') {
+        console.log('Admin user signed in successfully');
+        toast({
+          title: "Admin Access Granted",
+          description: "Welcome back, Administrator!",
+        });
+      } else {
+        toast({
+          title: "Welcome back!",
+          description: "You have successfully signed in.",
+        });
+      }
     } catch (error: any) {
       toast({
         title: "Sign In Failed",
@@ -151,6 +169,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     }
   };
+
+  // Debug logging for admin status
+  useEffect(() => {
+    if (user) {
+      console.log('Current user:', user.email, 'Is Admin:', isAdmin);
+    }
+  }, [user, isAdmin]);
 
   return (
     <AuthContext.Provider value={{
