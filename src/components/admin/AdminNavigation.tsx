@@ -1,7 +1,7 @@
 
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Shield, Users, Settings, BarChart3, Database, Activity, Home } from 'lucide-react';
+import { Shield, Users, CheckSquare, BarChart3, Home } from 'lucide-react';
 
 const AdminNavigation = () => {
   const navigate = useNavigate();
@@ -10,7 +10,7 @@ const AdminNavigation = () => {
   const navItems = [
     { icon: Shield, label: 'Dashboard', path: '/admin/dashboard' },
     { icon: Users, label: 'Users', path: '/admin/users' },
-    { icon: Settings, label: 'Tasks', path: '/admin/tasks' },
+    { icon: CheckSquare, label: 'Tasks', path: '/admin/tasks' },
     { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },
     { icon: Home, label: 'User View', path: '/workspace' }
   ];
