@@ -115,16 +115,6 @@ const Header = ({ title }: HeaderProps) => {
           </DropdownMenu>
         </div>
       </div>
-      
-      {/* Admin Badge - Positioned below header to avoid overlap */}
-      {isAdmin && (
-        <div className="absolute top-full right-4 mt-1 z-40">
-          <div className="bg-red-600 text-white px-2 py-1 rounded-md text-xs font-bold flex items-center gap-1 shadow-lg">
-            <Shield className="h-3 w-3" />
-            <span>ADMIN</span>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
