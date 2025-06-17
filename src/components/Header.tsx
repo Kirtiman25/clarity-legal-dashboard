@@ -60,67 +60,69 @@ const Header = ({ title }: HeaderProps) => {
         </div>
         
         {/* Right Section - Admin Badge and Profile */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-8">
           {/* Admin Badge */}
           {isAdmin && (
-            <div className="bg-red-600 text-white px-3 py-1.5 rounded-full text-sm font-bold flex items-center gap-2 shadow-sm">
+            <div className="bg-red-600 text-white px-3 py-1.5 rounded-full text-sm font-bold flex items-center gap-2 shadow-sm shrink-0">
               <Shield className="h-4 w-4" />
               <span>ADMIN</span>
             </div>
           )}
           
           {/* Profile Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src="" />
-                  <AvatarFallback className={`text-white ${isAdmin ? 'bg-red-600' : 'bg-orange-500'}`}>
-                    {displayName.charAt(0)?.toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            
-            <DropdownMenuContent className="w-56 bg-white shadow-lg border" align="end" forceMount>
-              <div className="flex items-center justify-start gap-2 p-2">
-                <div className="flex flex-col space-y-1 leading-none">
-                  <p className="font-medium">{displayName}</p>
-                  <p className="text-xs text-muted-foreground">{displayEmail}</p>
-                  {isAdmin && (
-                    <p className="text-xs text-red-600 font-medium flex items-center space-x-1">
-                      <Shield className="h-3 w-3" />
-                      <span>Administrator</span>
-                    </p>
-                  )}
+          <div className="shrink-0">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src="" />
+                    <AvatarFallback className={`text-white ${isAdmin ? 'bg-red-600' : 'bg-orange-500'}`}>
+                      {displayName.charAt(0)?.toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              
+              <DropdownMenuContent className="w-56 bg-white shadow-lg border" align="end" forceMount>
+                <div className="flex items-center justify-start gap-2 p-2">
+                  <div className="flex flex-col space-y-1 leading-none">
+                    <p className="font-medium">{displayName}</p>
+                    <p className="text-xs text-muted-foreground">{displayEmail}</p>
+                    {isAdmin && (
+                      <p className="text-xs text-red-600 font-medium flex items-center space-x-1">
+                        <Shield className="h-3 w-3" />
+                        <span>Administrator</span>
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-              
-              <DropdownMenuSeparator />
-              
-              {menuItems.map((item) => (
+                
+                <DropdownMenuSeparator />
+                
+                {menuItems.map((item) => (
+                  <DropdownMenuItem 
+                    key={item.path}
+                    onClick={() => navigate(item.path)}
+                    className="cursor-pointer"
+                  >
+                    <item.icon className="mr-2 h-4 w-4" />
+                    <span>{item.label}</span>
+                  </DropdownMenuItem>
+                ))}
+                
+                <DropdownMenuSeparator />
+                
                 <DropdownMenuItem 
-                  key={item.path}
-                  onClick={() => navigate(item.path)}
-                  className="cursor-pointer"
+                  onClick={handleLogout} 
+                  className="cursor-pointer text-red-600"
+                  disabled={isLoggingOut}
                 >
-                  <item.icon className="mr-2 h-4 w-4" />
-                  <span>{item.label}</span>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>{isLoggingOut ? 'Logging out...' : 'Log out'}</span>
                 </DropdownMenuItem>
-              ))}
-              
-              <DropdownMenuSeparator />
-              
-              <DropdownMenuItem 
-                onClick={handleLogout} 
-                className="cursor-pointer text-red-600"
-                disabled={isLoggingOut}
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>{isLoggingOut ? 'Logging out...' : 'Log out'}</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
     </div>
