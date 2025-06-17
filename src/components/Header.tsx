@@ -47,6 +47,16 @@ const Header = ({ title }: HeaderProps) => {
 
   return (
     <div className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 shadow-sm z-50">
+      {/* Admin Badge - Top Right Corner */}
+      {isAdmin && (
+        <div className="absolute top-2 right-4 z-10">
+          <div className="bg-red-600 text-white px-3 py-2 rounded-full text-sm font-bold flex items-center space-x-2 shadow-lg">
+            <Shield className="h-4 w-4" />
+            <span>ADMIN</span>
+          </div>
+        </div>
+      )}
+      
       <div className="flex items-center justify-between px-4 py-3">
         {/* Left Section - Logo and Title */}
         <div className="flex items-center space-x-4">
@@ -58,16 +68,6 @@ const Header = ({ title }: HeaderProps) => {
           <div className="h-8 w-px bg-gray-300"></div>
           <h1 className="text-lg font-bold text-gray-900">{title}</h1>
         </div>
-        
-        {/* Center Section - Admin Badge (separate) */}
-        {isAdmin && (
-          <div className="flex items-center">
-            <div className="bg-red-600 text-white px-3 py-2 rounded-full text-sm font-bold flex items-center space-x-2">
-              <Shield className="h-4 w-4" />
-              <span>ADMIN</span>
-            </div>
-          </div>
-        )}
         
         {/* Right Section - Profile */}
         <DropdownMenu>
