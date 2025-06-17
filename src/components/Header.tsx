@@ -48,26 +48,28 @@ const Header = ({ title }: HeaderProps) => {
   return (
     <div className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 shadow-sm z-50">
       <div className="flex items-center justify-between px-4 py-3">
-        {/* Logo Section with Admin Badge */}
+        {/* Left Section - Logo and Title */}
         <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <img 
-              src="/lovable-uploads/fa1e0532-ff2a-474a-a3c6-ce13d2cbb813.png" 
-              alt="Clar Catalyst Logo" 
-              className="h-16 w-auto"
-            />
-            {isAdmin && (
-              <div className="bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center space-x-1">
-                <Shield className="h-3 w-3" />
-                <span>ADMIN</span>
-              </div>
-            )}
-          </div>
+          <img 
+            src="/lovable-uploads/fa1e0532-ff2a-474a-a3c6-ce13d2cbb813.png" 
+            alt="Clar Catalyst Logo" 
+            className="h-16 w-auto"
+          />
           <div className="h-8 w-px bg-gray-300"></div>
           <h1 className="text-lg font-bold text-gray-900">{title}</h1>
         </div>
         
-        {/* Profile Section - Separate */}
+        {/* Center Section - Admin Badge (separate) */}
+        {isAdmin && (
+          <div className="flex items-center">
+            <div className="bg-red-600 text-white px-3 py-2 rounded-full text-sm font-bold flex items-center space-x-2">
+              <Shield className="h-4 w-4" />
+              <span>ADMIN</span>
+            </div>
+          </div>
+        )}
+        
+        {/* Right Section - Profile */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
