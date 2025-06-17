@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { LogOut, Users, Trophy, Home, MessageSquare, BarChart3 } from 'lucide-react';
+import { LogOut, Users, Trophy, Home, MessageSquare, BarChart3, Shield } from 'lucide-react';
 import { useAuth } from '@/hooks/useSimpleAuth';
 import { useState } from 'react';
 
