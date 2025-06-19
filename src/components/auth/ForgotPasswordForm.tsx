@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,6 +32,9 @@ const ForgotPasswordForm = () => {
     setIsSubmitting(true);
     
     try {
+      console.log('Sending reset email to:', email);
+      console.log('Redirect URL will be:', `${window.location.origin}/reset-password`);
+      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
@@ -41,12 +43,14 @@ const ForgotPasswordForm = () => {
         throw error;
       }
 
+      console.log('Reset email sent successfully');
       setIsEmailSent(true);
       toast({
         title: "Reset Email Sent",
         description: "Please check your email for password reset instructions.",
       });
     } catch (error: any) {
+      console.error('Reset email error:', error);
       setError(error.message || 'Failed to send reset email');
       toast({
         title: "Error",

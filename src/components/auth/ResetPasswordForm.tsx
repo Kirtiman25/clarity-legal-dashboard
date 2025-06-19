@@ -35,7 +35,8 @@ const ResetPasswordForm = () => {
         console.log('Reset password tokens:', { 
           hasAccessToken: !!accessToken, 
           hasRefreshToken: !!refreshToken, 
-          type 
+          type,
+          fullUrl: window.location.href
         });
 
         if (!accessToken || !refreshToken || type !== 'recovery') {
@@ -45,7 +46,7 @@ const ResetPasswordForm = () => {
           return;
         }
 
-        // Set the session from the URL parameters
+        // Set the session from the URL parameters without triggering auth redirects
         const { data, error: sessionError } = await supabase.auth.setSession({
           access_token: accessToken,
           refresh_token: refreshToken,
@@ -57,6 +58,10 @@ const ResetPasswordForm = () => {
         } else if (data.session) {
           console.log('Valid session established for password reset');
           setIsValidToken(true);
+          
+          // Clear URL parameters to prevent issues with navigation
+          const newUrl = window.location.pathname;
+          window.history.replaceState({}, '', newUrl);
         } else {
           console.error('No session established');
           setError('Unable to verify reset link. Please request a new password reset.');
@@ -69,7 +74,24 @@ const ResetPasswordForm = () => {
       }
     };
 
-    verifyToken();
+    // Only verify if we have URL parameters
+    const hasTokenParams = searchParams.get('access_token') || searchParams.get('token');
+    if (hasTokenParams) {
+      verifyToken();
+    } else {
+      // If no tokens in URL, this might be a direct navigation - check for existing session
+      const checkExistingSession = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          console.log('Found existing session for password reset');
+          setIsValidToken(true);
+        } else {
+          setError('No valid reset session found. Please use the link from your email.');
+        }
+        setIsLoading(false);
+      };
+      checkExistingSession();
+    }
   }, [searchParams]);
 
   const validatePassword = (pwd: string) => {
@@ -111,8 +133,9 @@ const ResetPasswordForm = () => {
         description: "Your password has been successfully updated.",
       });
 
-      // Redirect to sign in after a short delay
-      setTimeout(() => {
+      // Sign out to clear the recovery session and redirect to sign in
+      setTimeout(async () => {
+        await supabase.auth.signOut();
         navigate('/signin');
       }, 2000);
     } catch (error: any) {
