@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, Eye, EyeOff, CheckCircle } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, CheckCircle, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { Link } from 'react-router-dom';
 
 const ResetPasswordForm = () => {
   const navigate = useNavigate();
@@ -20,22 +21,55 @@ const ResetPasswordForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isValidToken, setIsValidToken] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if we have the necessary tokens from the URL
-    const accessToken = searchParams.get('access_token');
-    const refreshToken = searchParams.get('refresh_token');
-    
-    if (!accessToken || !refreshToken) {
-      setError('Invalid reset link. Please request a new password reset.');
-      return;
-    }
+    const verifyToken = async () => {
+      try {
+        // Check if we have the necessary tokens from the URL
+        const accessToken = searchParams.get('access_token');
+        const refreshToken = searchParams.get('refresh_token');
+        const type = searchParams.get('type');
+        
+        console.log('Reset password tokens:', { 
+          hasAccessToken: !!accessToken, 
+          hasRefreshToken: !!refreshToken, 
+          type 
+        });
 
-    // Set the session from the URL parameters
-    supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    });
+        if (!accessToken || !refreshToken || type !== 'recovery') {
+          console.error('Missing or invalid tokens for password reset');
+          setError('Invalid or expired reset link. Please request a new password reset.');
+          setIsLoading(false);
+          return;
+        }
+
+        // Set the session from the URL parameters
+        const { data, error: sessionError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          setError('Invalid or expired reset link. Please request a new password reset.');
+        } else if (data.session) {
+          console.log('Valid session established for password reset');
+          setIsValidToken(true);
+        } else {
+          console.error('No session established');
+          setError('Unable to verify reset link. Please request a new password reset.');
+        }
+      } catch (error: any) {
+        console.error('Token verification error:', error);
+        setError('An error occurred while verifying your reset link. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    verifyToken();
   }, [searchParams]);
 
   const validatePassword = (pwd: string) => {
@@ -82,6 +116,7 @@ const ResetPasswordForm = () => {
         navigate('/signin');
       }, 2000);
     } catch (error: any) {
+      console.error('Password update error:', error);
       setError(error.message || 'Failed to update password');
       toast({
         title: "Error",
@@ -93,6 +128,23 @@ const ResetPasswordForm = () => {
     }
   };
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md shadow-xl">
+          <CardContent className="flex items-center justify-center py-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
+              <p className="text-gray-600">Verifying reset link...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Success state
   if (isSuccess) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -121,6 +173,54 @@ const ResetPasswordForm = () => {
     );
   }
 
+  // Error state (invalid token)
+  if (!isValidToken) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md shadow-xl">
+          <CardHeader className="text-center pb-2">
+            <div className="flex justify-center mb-4">
+              <img 
+                src="/lovable-uploads/bf6a79a0-729c-4263-ac44-d1f2cda8c9cb.png" 
+                alt="Clar Catalyst Logo" 
+                className="h-32 w-auto"
+              />
+            </div>
+            <CardTitle className="text-2xl font-bold text-gray-900">
+              Reset Link Invalid
+            </CardTitle>
+            <p className="text-gray-600 text-sm">
+              This password reset link is invalid or has expired
+            </p>
+          </CardHeader>
+          
+          <CardContent>
+            <Alert className="mb-4" variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+            
+            <div className="space-y-4">
+              <Link to="/forgot-password">
+                <Button className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white font-semibold">
+                  Request New Reset Link
+                </Button>
+              </Link>
+              
+              <Link to="/signin">
+                <Button variant="outline" className="w-full h-12">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Sign In
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Main reset password form
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-xl">
