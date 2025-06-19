@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -154,7 +155,17 @@ const AuthForm = ({ onSignupSuccess }: AuthFormProps) => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                {isLogin && (
+                  <Link
+                    to="/forgot-password"
+                    className="text-xs text-orange-600 hover:text-orange-800 font-medium"
+                  >
+                    Forgot Password?
+                  </Link>
+                )}
+              </div>
               <div className="relative">
                 <Input
                   id="password"
